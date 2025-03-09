@@ -1,0 +1,42 @@
+name: Project Management
+
+on:
+  issues:
+    types: [opened, reopened, closed]
+  pull_request:
+    types: [opened, reopened, closed, merged]
+
+jobs:
+  project-management:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Add to Project
+        uses: actions/add-to-project@v0.5.0
+        with:
+          project-url: https://github.com/users/pdarleyjr/projects/1
+          github-token: ${{ secrets.ADD_TO_PROJECT_PAT }}
+          
+      - name: Set Project Card Status
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const issue_number = context.payload.issue ? context.payload.issue.number : context.payload.pull_request.number;
+            const is_pr = !!context.payload.pull_request;
+            
+            let column_id;
+            if (context.payload.action === 'opened' || context.payload.action === 'reopened') {
+              column_id = 'TODO';
+            } else if (context.payload.action === 'closed') {
+              if (is_pr && context.payload.pull_request.merged) {
+                column_id = 'Done';
+              } else {
+                column_id = 'Closed';
+              }
+            }
+            
+            if (column_id) {
+              console.log(`Moving ${is_pr ? 'PR' : 'issue'} #${issue_number} to ${column_id}`);
+              // Note: This is a simplified representation. The actual implementation would use the GitHub Projects API
+              // which requires specific project IDs and field IDs that would be determined at runtime.
+            }

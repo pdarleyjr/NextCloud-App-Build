@@ -1,0 +1,37 @@
+# Add 'frontend' label to any changes in the 'src' directory
+frontend:
+  - src/**/*
+  - webpack.config.js
+  - babel.config.js
+  - jest.config.js
+
+# Add 'backend' label to any changes in the 'lib' directory
+backend:
+  - lib/**/*
+  - composer.json
+  - .php-cs-fixer.dist.php
+  - phpunit.xml
+
+# Add 'test' label to any changes in the 'tests' directory
+test:
+  - tests/**/*
+  - jest.config.js
+  - phpunit.xml
+
+# Add 'documentation' label to any changes to markdown files
+documentation:
+  - '**/*.md'
+  - LICENSE
+
+# Add 'ci' label to any changes in the '.github/workflows' directory
+ci:
+  - .github/workflows/**/*
+
+# Add 'docker' label to any changes to docker-compose.yml
+docker:
+  - docker-compose.yml
+
+# Add 'dependencies' label to any changes to package.json or composer.json
+dependencies:
+  - package.json
+  - composer.json

@@ -1,0 +1,56 @@
+name: Codespace PR Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  setup-codespace:
+    name: Setup Codespace for PR Review
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PR
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          
+      - name: Create Codespace
+        uses: github/codespaces-precreate@v1
+        with:
+          devcontainer-path: .devcontainer/devcontainer.json
+          
+      - name: Comment on PR
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const prNumber = context.issue.number;
+            const repoOwner = context.repo.owner;
+            const repoName = context.repo.repo;
+            
+            const codespaceUrl = `https://github.com/codespaces/new?hide_repo=true&ref=${context.payload.pull_request.head.ref}&repo=${repoOwner}%2F${repoName}&pr=${prNumber}`;
+            
+            const body = `## Codespace for PR Review
+            
+            A Codespace has been prepared for reviewing this PR.
+            
+            [Open in Codespace](${codespaceUrl})
+            
+            This environment includes:
+            - The PR code checked out
+            - All dependencies installed
+            - Tests ready to run
+            
+            To review:
+            1. Click the link above to open the Codespace
+            2. Run tests with \`npm test\`
+            3. Review code changes
+            4. Submit your review on GitHub`;
+            
+            github.rest.issues.createComment({
+              issue_number: prNumber,
+              owner: repoOwner,
+              repo: repoName,
+              body: body
+            });
