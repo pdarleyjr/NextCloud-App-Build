@@ -1,8 +1,11 @@
 {
-  "name": "NextCloud App Development",
-  "dockerComposeFile": "../docker-compose.yml",
-  "service": "app",
-  "workspaceFolder": "/workspaces/NextCloud-App-Build",
+  "name": "Nextcloud Development",
+  "image": "mcr.microsoft.com/vscode/devcontainers/base:ubuntu",
+  "features": {
+    "docker-in-docker": "latest"
+  },
+  "forwardPorts": [80, 443, 3306, 8080],
+  "postCreateCommand": "bash .devcontainer/setup.sh",
   
   "customizations": {
     "vscode": {
@@ -25,22 +28,6 @@
         "php.suggest.basic": true,
         "intelephense.environment.phpVersion": "8.1"
       }
-    }
-  },
-  
-  "forwardPorts": [8080],
-  
-  "postCreateCommand": "composer install && npm install",
-  
-  "remoteUser": "vscode",
-  
-  "features": {
-    "ghcr.io/devcontainers/features/github-cli:1": {},
-    "ghcr.io/devcontainers/features/node:1": {
-      "version": "lts"
-    },
-    "ghcr.io/devcontainers/features/php:1": {
-      "version": "8.1"
     }
   }
 }

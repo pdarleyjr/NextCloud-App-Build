@@ -1,0 +1,41 @@
+version: '3.8'
+services:
+  db:
+    image: mariadb:latest
+    container_name: nextcloud-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: nextcloud
+      MYSQL_USER: nextcloud
+      MYSQL_PASSWORD: nextcloudpassword
+    volumes:
+      - db_data:/var/lib/mysql
+
+  nextcloud:
+    image: nextcloud:latest
+    container_name: nextcloud-app
+    restart: always
+    ports:
+      - "8080:80"
+    environment:
+      MYSQL_HOST: db
+      MYSQL_DATABASE: nextcloud
+      MYSQL_USER: nextcloud
+      MYSQL_PASSWORD: nextcloudpassword
+    volumes:
+      - nextcloud_data:/var/www/html
+      - ./custom_apps:/var/www/html/custom_apps
+
+  app:
+    image: mcr.microsoft.com/vscode/devcontainers/php:8.1
+    volumes:
+      - .:/workspaces/NextCloud-App-Build
+    command: sleep infinity
+    depends_on:
+      - nextcloud
+      - db
+
+volumes:
+  db_data:
+  nextcloud_data:

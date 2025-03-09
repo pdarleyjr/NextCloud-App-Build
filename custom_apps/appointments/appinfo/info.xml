@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<info xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
+    <id>appointments</id>
+    <name>Therapist Appointments</name>
+    <summary>Schedule appointments with therapists</summary>
+    <description><![CDATA[
+This app allows users to schedule appointments with therapists.
+Features include:
+- Multiple therapists (each Nextcloud user is a therapist)
+- Advanced scheduling features (recurring appointments, cancellations, etc.)
+- Invoice & Superbill generation with Square payments integration
+]]></description>
+    <version>1.0.0</version>
+    <licence>agpl</licence>
+    <author>NextCloud App Build</author>
+    <namespace>Appointments</namespace>
+    <category>office</category>
+    <category>organization</category>
+    <category>social</category>
+    <bugs>https://github.com/pdarleyjr/NextCloud-App-Build/issues</bugs>
+    <dependencies>
+        <nextcloud min-version="22" max-version="25" />
+    </dependencies>
+    <navigations>
+        <navigation>
+            <name>Appointments</name>
+            <route>appointments.page.index</route>
+        </navigation>
+    </navigations>
+</info>
