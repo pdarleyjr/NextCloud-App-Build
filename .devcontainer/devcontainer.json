@@ -1,0 +1,46 @@
+{
+  "name": "NextCloud App Development",
+  "dockerComposeFile": "../docker-compose.yml",
+  "service": "app",
+  "workspaceFolder": "/workspaces/NextCloud-App-Build",
+  
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "bmewburn.vscode-intelephense-client",
+        "ms-azuretools.vscode-docker",
+        "redhat.vscode-yaml",
+        "github.vscode-github-actions",
+        "github.vscode-pull-request-github",
+        "xdebug.php-debug"
+      ],
+      "settings": {
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+          "source.fixAll.eslint": true
+        },
+        "php.validate.executablePath": "/usr/local/bin/php",
+        "php.suggest.basic": true,
+        "intelephense.environment.phpVersion": "8.1"
+      }
+    }
+  },
+  
+  "forwardPorts": [8080],
+  
+  "postCreateCommand": "composer install && npm install",
+  
+  "remoteUser": "vscode",
+  
+  "features": {
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "lts"
+    },
+    "ghcr.io/devcontainers/features/php:1": {
+      "version": "8.1"
+    }
+  }
+}
