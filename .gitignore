@@ -1,0 +1,62 @@
+# NextCloud app specific
+/build/
+/js/
+/vendor/
+/node_modules/
+/.php_cs.cache
+/.php-cs-fixer.cache
+/.phpunit.result.cache
+
+# Composer
+/composer.lock
+/composer.phar
+
+# NPM/Yarn
+/package-lock.json
+/yarn.lock
+/yarn-error.log
+
+# IDE and editor specific files
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Testing
+/coverage/
+/.nyc_output/
+/tests/output/
+
+# Build artifacts
+*.log
+*.bak
+*.tmp
+*.temp
+
+# Dependency directories
+/.sass-cache/
+/bower_components/
+
+# Nextcloud app build artifacts
+/appinfo/signature.json
+/appinfo/certificates/
+/js/
+/css/
+/build/
+
+# Compiled files
+*.min.js
+*.min.css
