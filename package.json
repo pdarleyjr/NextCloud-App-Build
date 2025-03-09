@@ -1,0 +1,65 @@
+{
+  "name": "nextcloud-app",
+  "version": "0.0.1",
+  "description": "A template Nextcloud app",
+  "main": "index.js",
+  "scripts": {
+    "build": "webpack --node-env production --progress",
+    "dev": "webpack --node-env development --progress",
+    "watch": "webpack --node-env development --progress --watch",
+    "serve": "webpack serve --node-env development --progress",
+    "lint": "eslint --ext .js,.vue src",
+    "lint:fix": "eslint --ext .js,.vue src --fix",
+    "stylelint": "stylelint src/**/*.{css,scss,vue}",
+    "stylelint:fix": "stylelint src/**/*.{css,scss,vue} --fix"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pdarleyjr/NextCloud-App-Build.git"
+  },
+  "keywords": [
+    "nextcloud",
+    "app",
+    "template"
+  ],
+  "author": "Your Name <your.email@example.com>",
+  "license": "AGPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/pdarleyjr/NextCloud-App-Build/issues"
+  },
+  "homepage": "https://github.com/pdarleyjr/NextCloud-App-Build#readme",
+  "devDependencies": {
+    "@babel/core": "^7.21.0",
+    "@babel/preset-env": "^7.20.2",
+    "@nextcloud/babel-config": "^1.0.0",
+    "@nextcloud/browserslist-config": "^2.3.0",
+    "@nextcloud/eslint-config": "^8.2.0",
+    "@nextcloud/stylelint-config": "^2.3.0",
+    "@nextcloud/webpack-vue-config": "^5.4.0",
+    "babel-loader": "^9.1.2",
+    "css-loader": "^6.7.3",
+    "eslint": "^8.36.0",
+    "eslint-webpack-plugin": "^4.0.0",
+    "sass": "^1.59.2",
+    "sass-loader": "^13.2.0",
+    "stylelint": "^15.2.0",
+    "stylelint-webpack-plugin": "^4.1.0",
+    "webpack": "^5.76.1",
+    "webpack-cli": "^5.0.1",
+    "webpack-dev-server": "^4.11.1"
+  },
+  "dependencies": {
+    "@nextcloud/axios": "^2.3.0",
+    "@nextcloud/dialogs": "^4.0.1",
+    "@nextcloud/router": "^2.1.1",
+    "@nextcloud/vue": "^7.4.0",
+    "vue": "^2.7.14"
+  },
+  "browserslist": [
+    "extends @nextcloud/browserslist-config"
+  ],
+  "engines": {
+    "node": "^16.0.0",
+    "npm": "^7.0.0 || ^8.0.0"
+  }
+}
