@@ -24,16 +24,16 @@
 </template>
 
 <script>
-import { AppContent, AppNavigation, AppNavigationItem } from '@nextcloud/vue';
+import { NcAppContent, NcAppNavigation, NcAppNavigationItem } from '@nextcloud/vue';
 import { translate as t } from '@nextcloud/l10n';
 
 export default {
   name: 'App',
   
   components: {
-    AppContent,
-    AppNavigation,
-    AppNavigationItem
+    AppContent: NcAppContent,
+    AppNavigation: NcAppNavigation,
+    AppNavigationItem: NcAppNavigationItem
   },
   
   data() {

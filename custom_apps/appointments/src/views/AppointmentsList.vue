@@ -18,15 +18,15 @@
       <h2>{{ t('appointments', 'No appointments found') }}</h2>
       <p v-if="!isTherapist">
         {{ t('appointments', 'You have no upcoming appointments. Click the button below to book one.') }}
-        <div class="empty-content__action">
-          <button class="primary" @click="bookAppointment">
-            {{ t('appointments', 'Book Appointment') }}
-          </button>
-        </div>
       </p>
       <p v-else>
         {{ t('appointments', 'You have no upcoming appointments with clients.') }}
       </p>
+      <div v-if="!isTherapist" class="empty-content__action">
+        <button class="primary" @click="bookAppointment">
+          {{ t('appointments', 'Book Appointment') }}
+        </button>
+      </div>
     </div>
     
     <div v-else class="appointments-grid">
