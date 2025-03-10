@@ -39,16 +39,18 @@ module.exports = {
 						loader: 'file-loader',
 						options: {
 							outputPath: '../css/',
-							name: '[name].css'
+							name: '[name].css',
+							sourceMap: true
 						}
 					},
 					{
 						loader: 'sass-loader',
-						options: this.mode === 'production' ? {
-							sassOptions: {
+						options: {
+							sourceMap: true,
+							sassOptions: this.mode === 'production' ? {
 								outputStyle: 'compressed',
-							}
-						} : {}
+							} : {}
+						}
 					}
 				]
 			},

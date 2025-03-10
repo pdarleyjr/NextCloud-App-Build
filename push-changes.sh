@@ -12,7 +12,7 @@ git config --global user.email "pdarleyjr@gmail.com"
 git add .
 
 # Commit changes
-git commit -m "Integrated therapist scheduling and payments app"
+git commit -m "Fix 404 errors for SCSS/CSS files and GitHub Codespaces session timeout issues"
 
 # Push to GitHub
 git push origin main

@@ -6,6 +6,8 @@
   },
   "forwardPorts": [80, 443, 3306, 8080],
   "postCreateCommand": "bash .devcontainer/setup.sh",
+  "postAttachCommand": "bash keep-session-alive.sh &",
+  "idleTimeout": "2h",
   
   "customizations": {
     "vscode": {
