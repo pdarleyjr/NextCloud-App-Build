@@ -44,13 +44,20 @@ return [
 		['name' => 'appointment#getAnalytics', 'url' => '/api/appointments/analytics', 'verb' => 'GET'],
 		['name' => 'appointment#getPracticeAnalytics', 'url' => '/api/appointments/analytics/practice', 'verb' => 'GET'],
 		
+		// Appointment Type routes
+		['name' => 'appointment_type#getAll', 'url' => '/api/appointment-types', 'verb' => 'GET'],
+		['name' => 'appointment_type#get', 'url' => '/api/appointment-types/{id}', 'verb' => 'GET'],
+		['name' => 'appointment_type#getByCategory', 'url' => '/api/appointment-types/category/{category}', 'verb' => 'GET'],
+		['name' => 'appointment_type#update', 'url' => '/api/appointment-types', 'verb' => 'PUT'],
+		
 		// Billing routes
 		['name' => 'billing#createInvoice', 'url' => '/api/invoices', 'verb' => 'POST'],
 		['name' => 'billing#getInvoice', 'url' => '/api/invoices/{id}', 'verb' => 'GET'],
+		['name' => 'billing#getInvoices', 'url' => '/api/invoices', 'verb' => 'GET'],
 		['name' => 'billing#createSuperbill', 'url' => '/api/superbills', 'verb' => 'POST'],
 		['name' => 'billing#getSuperbill', 'url' => '/api/superbills/{id}', 'verb' => 'GET'],
-		['name' => 'billing#processPayment', 'url' => '/api/payments', 'verb' => 'POST'],
-		['name' => 'billing#getSquareCredentials', 'url' => '/api/square/credentials', 'verb' => 'GET'],
+		['name' => 'billing#processPayment', 'url' => '/api/billing/process-payment', 'verb' => 'POST'],
+		['name' => 'billing#getSquareCredentials', 'url' => '/api/billing/square-credentials', 'verb' => 'GET'],
 		['name' => 'billing#setSquareCredentials', 'url' => '/api/square/credentials', 'verb' => 'POST'],
 	]
 ];

@@ -152,6 +152,7 @@ class AppointmentController extends Controller {
             $therapistId,
             $startTime,
             $endTime,
+            $appointmentTypeId,
             $title,
             $notes,
             $isRecurring,

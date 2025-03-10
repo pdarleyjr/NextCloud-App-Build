@@ -380,7 +380,7 @@ class BillingService {
     
     /**
      * Process a payment for an invoice using Square
-     * 
+     *
      * @param string $invoiceId The invoice ID
      * @param string $nonce The payment nonce from Square
      * @param float $amount The payment amount
@@ -394,26 +394,89 @@ class BillingService {
             return null;
         }
         
-        // TODO: Implement Square payment processing
-        // This would involve making API calls to Square's payment API
+        // Get Square credentials
+        $credentials = $this->getSquareCredentials();
+        $accessToken = $credentials['accessToken'];
+        $environment = $credentials['environment'];
         
-        // For now, simulate a successful payment
-        $paymentId = uniqid('pay_');
-        $payment = [
-            'id' => $paymentId,
-            'invoiceId' => $invoiceId,
-            'amount' => $amount,
-            'status' => 'succeeded',
-            'createdAt' => time()
+        if (empty($accessToken)) {
+            $this->logger->error('Square access token not configured');
+            return null;
+        }
+        
+        // Set up Square API endpoint
+        $apiUrl = $environment === 'sandbox'
+            ? 'https://connect.squareupsandbox.com/v2/payments'
+            : 'https://connect.squareup.com/v2/payments';
+        
+        // Convert amount to cents (Square requires amount in cents)
+        $amountInCents = (int) ($amount * 100);
+        
+        // Prepare payment request
+        $paymentData = [
+            'source_id' => $nonce,
+            'idempotency_key' => uniqid('payment_'),
+            'amount_money' => [
+                'amount' => $amountInCents,
+                'currency' => 'USD'
+            ],
+            'reference_id' => $invoiceId,
+            'note' => 'Payment for appointment #' . $invoice['appointmentId']
         ];
         
-        // Update the invoice status
-        $this->updateInvoice($invoiceId, [
-            'status' => 'paid',
-            'paidAt' => time()
-        ]);
-        
-        return $payment;
+        try {
+            // Make API request to Square
+            $ch = curl_init($apiUrl);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($paymentData));
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                'Square-Version: 2023-09-25',
+                'Authorization: Bearer ' . $accessToken,
+                'Content-Type: application/json'
+            ]);
+            
+            $response = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+            
+            if ($httpCode >= 200 && $httpCode < 300) {
+                $responseData = json_decode($response, true);
+                
+                if (isset($responseData['payment']) && $responseData['payment']['status'] === 'COMPLETED') {
+                    // Payment successful
+                    $paymentId = $responseData['payment']['id'];
+                    $payment = [
+                        'id' => $paymentId,
+                        'invoiceId' => $invoiceId,
+                        'amount' => $amount,
+                        'status' => 'succeeded',
+                        'squarePaymentId' => $paymentId,
+                        'createdAt' => time()
+                    ];
+                    
+                    // Update the invoice status
+                    $this->updateInvoice($invoiceId, [
+                        'status' => 'paid',
+                        'paidAt' => time(),
+                        'paymentId' => $paymentId
+                    ]);
+                    
+                    return $payment;
+                } else {
+                    // Payment failed
+                    $this->logger->error('Square payment failed: ' . $response);
+                    return null;
+                }
+            } else {
+                // API request failed
+                $this->logger->error('Square API request failed: ' . $response);
+                return null;
+            }
+        } catch (\Exception $e) {
+            $this->logger->error('Exception during Square payment processing: ' . $e->getMessage());
+            return null;
+        }
     }
     
     /**
