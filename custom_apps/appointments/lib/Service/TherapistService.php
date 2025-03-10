@@ -2,36 +2,12 @@
 
 declare(strict_types=1);
 
-/**
- * @copyright Copyright (c) 2023 NextCloud App Build
- *
- * @author NextCloud App Build
- *
- * @license AGPL-3.0-or-later
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- *
- */
-
 namespace OCA\Appointments\Service;
 
 use OCA\Appointments\AppInfo\Application;
 use OCP\IConfig;
 use OCP\IUserManager;
 use OCP\IUser;
-use OCP\AppFramework\Http;
-use OCP\AppFramework\Http\JSONResponse;
 
 /**
  * Service class for therapist-related operations
@@ -47,7 +23,7 @@ class TherapistService {
      * Constructor for TherapistService
      * 
      * @param IConfig $config The configuration service
-     * @param IUserManager $userManager The user manager service
+     * @param IUserManager $userManager The user manager
      */
     public function __construct(IConfig $config, IUserManager $userManager) {
         $this->config = $config;
@@ -57,138 +33,221 @@ class TherapistService {
     /**
      * Check if a user is a therapist
      * 
-     * @param string $userId The user ID to check
+     * @param string $userId The user ID
      * @return bool True if the user is a therapist, false otherwise
      */
     public function isTherapist(string $userId): bool {
         return $this->config->getUserValue(
-            $userId, 
-            Application::APP_ID, 
-            Application::CONFIG_IS_THERAPIST, 
+            $userId,
+            Application::APP_ID,
+            'is_therapist',
             'false'
         ) === 'true';
     }
     
     /**
-     * Get a therapist by ID
+     * Set a user as a therapist
      * 
-     * @param string $therapistId The therapist ID to get
-     * @return array|null The therapist data, or null if not found
+     * @param string $userId The user ID
+     * @param bool $isTherapist Whether the user is a therapist
+     * @return bool True if successful, false otherwise
      */
-    public function getTherapist(string $therapistId): ?array {
-        $user = $this->userManager->get($therapistId);
+    public function setTherapist(string $userId, bool $isTherapist): bool {
+        $this->config->setUserValue(
+            $userId,
+            Application::APP_ID,
+            'is_therapist',
+            $isTherapist ? 'true' : 'false'
+        );
         
-        if ($user === null || !$this->isTherapist($therapistId)) {
-            return null;
-        }
-        
-        return $this->formatTherapistData($user);
+        return true;
     }
     
     /**
      * Get all therapists
      * 
-     * @return array Array of therapist data
+     * @return array The therapists
      */
     public function getAllTherapists(): array {
-        $users = $this->userManager->search('');
         $therapists = [];
         
-        foreach ($users as $user) {
+        $this->userManager->callForAllUsers(function(IUser $user) use (&$therapists) {
             $userId = $user->getUID();
             
             if ($this->isTherapist($userId)) {
-                $therapists[] = $this->formatTherapistData($user);
+                $therapists[] = [
+                    'id' => $userId,
+                    'displayName' => $user->getDisplayName(),
+                    'email' => $user->getEMailAddress(),
+                    'specialties' => $this->getTherapistSpecialties($userId),
+                    'bio' => $this->getTherapistBio($userId),
+                    'hourlyRate' => $this->getTherapistHourlyRate($userId)
+                ];
             }
-        }
+        });
         
         return $therapists;
     }
     
     /**
-     * Format therapist data from a user object
+     * Get a specific therapist
      * 
-     * @param IUser $user The user object
-     * @return array The formatted therapist data
+     * @param string $therapistId The therapist ID
+     * @return array|null The therapist, or null if not found
      */
-    private function formatTherapistData(IUser $user): array {
-        $userId = $user->getUID();
+    public function getTherapist(string $therapistId): ?array {
+        if (!$this->isTherapist($therapistId)) {
+            return null;
+        }
+        
+        $user = $this->userManager->get($therapistId);
+        
+        if ($user === null) {
+            return null;
+        }
         
         return [
-            'id' => $userId,
+            'id' => $therapistId,
             'displayName' => $user->getDisplayName(),
             'email' => $user->getEMailAddress(),
-            'specialties' => json_decode($this->config->getUserValue(
-                $userId,
-                Application::APP_ID,
-                Application::CONFIG_SPECIALTIES,
-                '[]'
-            ), true),
-            'bio' => $this->config->getUserValue(
-                $userId, 
-                Application::APP_ID, 
-                Application::CONFIG_BIO, 
-                ''
-            ),
-            'hourlyRate' => (float)$this->config->getUserValue(
-                $userId, 
-                Application::APP_ID, 
-                Application::CONFIG_HOURLY_RATE, 
-                '0'
-            )
+            'specialties' => $this->getTherapistSpecialties($therapistId),
+            'bio' => $this->getTherapistBio($therapistId),
+            'hourlyRate' => $this->getTherapistHourlyRate($therapistId)
         ];
+    }
+    
+    /**
+     * Get a therapist's specialties
+     * 
+     * @param string $therapistId The therapist ID
+     * @return array The specialties
+     */
+    public function getTherapistSpecialties(string $therapistId): array {
+        $specialties = $this->config->getUserValue(
+            $therapistId,
+            Application::APP_ID,
+            'specialties',
+            '[]'
+        );
+        
+        return json_decode($specialties, true);
+    }
+    
+    /**
+     * Set a therapist's specialties
+     * 
+     * @param string $therapistId The therapist ID
+     * @param array $specialties The specialties
+     * @return bool True if successful, false otherwise
+     */
+    public function setTherapistSpecialties(string $therapistId, array $specialties): bool {
+        $this->config->setUserValue(
+            $therapistId,
+            Application::APP_ID,
+            'specialties',
+            json_encode($specialties)
+        );
+        
+        return true;
+    }
+    
+    /**
+     * Get a therapist's bio
+     * 
+     * @param string $therapistId The therapist ID
+     * @return string The bio
+     */
+    public function getTherapistBio(string $therapistId): string {
+        return $this->config->getUserValue(
+            $therapistId,
+            Application::APP_ID,
+            'bio',
+            ''
+        );
+    }
+    
+    /**
+     * Set a therapist's bio
+     * 
+     * @param string $therapistId The therapist ID
+     * @param string $bio The bio
+     * @return bool True if successful, false otherwise
+     */
+    public function setTherapistBio(string $therapistId, string $bio): bool {
+        $this->config->setUserValue(
+            $therapistId,
+            Application::APP_ID,
+            'bio',
+            $bio
+        );
+        
+        return true;
+    }
+    
+    /**
+     * Get a therapist's hourly rate
+     * 
+     * @param string $therapistId The therapist ID
+     * @return float The hourly rate
+     */
+    public function getTherapistHourlyRate(string $therapistId): float {
+        $hourlyRate = $this->config->getUserValue(
+            $therapistId,
+            Application::APP_ID,
+            'hourly_rate',
+            '0'
+        );
+        
+        return (float) $hourlyRate;
+    }
+    
+    /**
+     * Set a therapist's hourly rate
+     * 
+     * @param string $therapistId The therapist ID
+     * @param float $hourlyRate The hourly rate
+     * @return bool True if successful, false otherwise
+     */
+    public function setTherapistHourlyRate(string $therapistId, float $hourlyRate): bool {
+        $this->config->setUserValue(
+            $therapistId,
+            Application::APP_ID,
+            'hourly_rate',
+            (string) $hourlyRate
+        );
+        
+        return true;
     }
     
     /**
      * Get a therapist's schedule
      * 
      * @param string $therapistId The therapist ID
-     * @return array|null The schedule data, or null if therapist not found
+     * @return array The schedule
      */
-    public function getTherapistSchedule(string $therapistId): ?array {
-        if (!$this->isTherapist($therapistId)) {
-            return null;
-        }
-        
-        // Get the therapist's schedule
-        $schedule = json_decode($this->config->getUserValue(
+    public function getTherapistSchedule(string $therapistId): array {
+        $schedule = $this->config->getUserValue(
             $therapistId,
             Application::APP_ID,
-            Application::CONFIG_SCHEDULE,
-            '{}'
-        ), true);
-        
-        // Get booked appointments
-        $appointments = json_decode($this->config->getUserValue(
-            $therapistId,
-            Application::APP_ID,
-            Application::CONFIG_APPOINTMENTS,
+            'schedule',
             '[]'
-        ), true);
+        );
         
-        return [
-            'schedule' => $schedule,
-            'appointments' => $appointments
-        ];
+        return json_decode($schedule, true);
     }
     
     /**
-     * Update a therapist's schedule
+     * Set a therapist's schedule
      * 
      * @param string $therapistId The therapist ID
-     * @param array $schedule The new schedule data
+     * @param array $schedule The schedule
      * @return bool True if successful, false otherwise
      */
-    public function updateTherapistSchedule(string $therapistId, array $schedule): bool {
-        if (!$this->isTherapist($therapistId)) {
-            return false;
-        }
-        
-        // Save the schedule
+    public function setTherapistSchedule(string $therapistId, array $schedule): bool {
         $this->config->setUserValue(
             $therapistId,
             Application::APP_ID,
-            Application::CONFIG_SCHEDULE,
+            'schedule',
             json_encode($schedule)
         );
         

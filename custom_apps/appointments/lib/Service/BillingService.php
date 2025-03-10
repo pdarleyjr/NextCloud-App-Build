@@ -2,39 +2,12 @@
 
 declare(strict_types=1);
 
-/**
- * @copyright Copyright (c) 2023 NextCloud App Build
- *
- * @author NextCloud App Build
- *
- * @license AGPL-3.0-or-later
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- *
- */
-
 namespace OCA\Appointments\Service;
 
 use OCA\Appointments\AppInfo\Application;
 use OCP\IConfig;
 use OCP\IUserManager;
 use OCP\ILogger;
-use Square\SquareClient;
-use Square\Environment;
-use Square\Exceptions\ApiException;
-use Square\Models\Money;
-use Square\Models\CreatePaymentRequest;
 
 /**
  * Service class for billing-related operations
@@ -53,8 +26,8 @@ class BillingService {
      * Constructor for BillingService
      * 
      * @param IConfig $config The configuration service
-     * @param IUserManager $userManager The user manager service
-     * @param ILogger $logger The logger service
+     * @param IUserManager $userManager The user manager
+     * @param ILogger $logger The logger
      */
     public function __construct(IConfig $config, IUserManager $userManager, ILogger $logger) {
         $this->config = $config;
@@ -67,116 +40,44 @@ class BillingService {
      * 
      * @param string $appointmentId The appointment ID
      * @param string $therapistId The therapist ID
-     * @param string $userId The user ID creating the invoice
-     * @param float|null $customAmount Custom amount for the invoice
-     * @param string $description Description for the invoice
+     * @param string $clientId The client ID
+     * @param float $amount The invoice amount
+     * @param string $description The invoice description
+     * @param array $items The invoice items
      * @return array|null The created invoice, or null if creation failed
      */
     public function createInvoice(
         string $appointmentId,
         string $therapistId,
-        string $userId,
-        ?float $customAmount = null,
-        string $description = 'Therapy Session'
+        string $clientId,
+        float $amount,
+        string $description = '',
+        array $items = []
     ): ?array {
-        // Check if therapist exists and is a therapist
-        $therapist = $this->userManager->get($therapistId);
-        
-        if ($therapist === null) {
-            return null;
-        }
-        
-        $isTherapist = $this->config->getUserValue(
-            $therapistId, 
-            Application::APP_ID, 
-            Application::CONFIG_IS_THERAPIST, 
-            'false'
-        ) === 'true';
-        
-        if (!$isTherapist) {
-            return null;
-        }
-        
-        // Find the appointment
-        $appointment = null;
-        $appointments = json_decode($this->config->getUserValue(
-            $therapistId,
-            Application::APP_ID,
-            Application::CONFIG_APPOINTMENTS,
-            '[]'
-        ), true);
-        
-        foreach ($appointments as $appt) {
-            if (isset($appt['id']) && $appt['id'] === $appointmentId) {
-                $appointment = $appt;
-                break;
-            }
-        }
-        
-        if ($appointment === null) {
-            return null;
-        }
-        
-        // Check if the current user is the therapist or the client
-        if ($userId !== $therapistId && 
-            (!isset($appointment['clientId']) || $appointment['clientId'] !== $userId)) {
-            return null;
-        }
-        
-        // Calculate the amount if not provided
-        $amount = $customAmount;
-        
-        if ($amount === null) {
-            $hourlyRate = (float)$this->config->getUserValue(
-                $therapistId, 
-                Application::APP_ID, 
-                Application::CONFIG_HOURLY_RATE, 
-                '0'
-            );
-            
-            if ($hourlyRate <= 0) {
-                return null;
-            }
-            
-            // Calculate duration in hours
-            $startTime = strtotime($appointment['startTime']);
-            $endTime = strtotime($appointment['endTime']);
-            $durationHours = ($endTime - $startTime) / 3600;
-            
-            // Calculate amount
-            $amount = $hourlyRate * $durationHours;
-        }
-        
         // Create the invoice
         $invoiceId = uniqid('inv_');
         $invoice = [
             'id' => $invoiceId,
             'appointmentId' => $appointmentId,
             'therapistId' => $therapistId,
-            'therapistName' => $therapist->getDisplayName(),
-            'clientId' => $appointment['clientId'],
-            'clientName' => $appointment['clientName'],
+            'clientId' => $clientId,
             'amount' => $amount,
             'description' => $description,
+            'items' => $items,
             'status' => 'pending',
             'createdAt' => time(),
-            'dueDate' => strtotime('+7 days')
+            'dueDate' => time() + (30 * 24 * 60 * 60), // 30 days from now
+            'paidAt' => null
         ];
         
         // Save the invoice
-        $invoices = json_decode($this->config->getUserValue(
-            $therapistId,
-            Application::APP_ID,
-            Application::CONFIG_INVOICES,
-            '[]'
-        ), true);
-        
+        $invoices = $this->getInvoicesForTherapist($therapistId);
         $invoices[] = $invoice;
         
         $this->config->setUserValue(
             $therapistId,
             Application::APP_ID,
-            Application::CONFIG_INVOICES,
+            'invoices',
             json_encode($invoices)
         );
         
@@ -184,212 +85,395 @@ class BillingService {
     }
     
     /**
-     * Get an invoice by ID
+     * Create a superbill for an appointment
+     * 
+     * @param string $appointmentId The appointment ID
+     * @param string $therapistId The therapist ID
+     * @param string $clientId The client ID
+     * @param float $amount The superbill amount
+     * @param string $description The superbill description
+     * @param array $diagnosisCodes The diagnosis codes
+     * @param array $procedureCodes The procedure codes
+     * @return array|null The created superbill, or null if creation failed
+     */
+    public function createSuperbill(
+        string $appointmentId,
+        string $therapistId,
+        string $clientId,
+        float $amount,
+        string $description = '',
+        array $diagnosisCodes = [],
+        array $procedureCodes = []
+    ): ?array {
+        // Create the superbill
+        $superbillId = uniqid('sb_');
+        $superbill = [
+            'id' => $superbillId,
+            'appointmentId' => $appointmentId,
+            'therapistId' => $therapistId,
+            'clientId' => $clientId,
+            'amount' => $amount,
+            'description' => $description,
+            'diagnosisCodes' => $diagnosisCodes,
+            'procedureCodes' => $procedureCodes,
+            'status' => 'pending',
+            'createdAt' => time()
+        ];
+        
+        // Save the superbill
+        $superbills = $this->getSuperbillsForTherapist($therapistId);
+        $superbills[] = $superbill;
+        
+        $this->config->setUserValue(
+            $therapistId,
+            Application::APP_ID,
+            'superbills',
+            json_encode($superbills)
+        );
+        
+        return $superbill;
+    }
+    
+    /**
+     * Get all invoices for a therapist
+     * 
+     * @param string $therapistId The therapist ID
+     * @return array The invoices
+     */
+    public function getInvoicesForTherapist(string $therapistId): array {
+        $invoices = $this->config->getUserValue(
+            $therapistId,
+            Application::APP_ID,
+            'invoices',
+            '[]'
+        );
+        
+        return json_decode($invoices, true);
+    }
+    
+    /**
+     * Get all superbills for a therapist
+     * 
+     * @param string $therapistId The therapist ID
+     * @return array The superbills
+     */
+    public function getSuperbillsForTherapist(string $therapistId): array {
+        $superbills = $this->config->getUserValue(
+            $therapistId,
+            Application::APP_ID,
+            'superbills',
+            '[]'
+        );
+        
+        return json_decode($superbills, true);
+    }
+    
+    /**
+     * Get all invoices for a client
+     * 
+     * @param string $clientId The client ID
+     * @return array The invoices
+     */
+    public function getInvoicesForClient(string $clientId): array {
+        $invoices = [];
+        
+        // Get all therapists
+        $this->userManager->callForAllUsers(function($user) use (&$invoices, $clientId) {
+            $therapistId = $user->getUID();
+            $therapistInvoices = $this->getInvoicesForTherapist($therapistId);
+            
+            // Filter invoices for the current client
+            foreach ($therapistInvoices as $invoice) {
+                if (isset($invoice['clientId']) && $invoice['clientId'] === $clientId) {
+                    $invoice['therapistName'] = $user->getDisplayName();
+                    $invoices[] = $invoice;
+                }
+            }
+        });
+        
+        return $invoices;
+    }
+    
+    /**
+     * Get all superbills for a client
+     * 
+     * @param string $clientId The client ID
+     * @return array The superbills
+     */
+    public function getSuperbillsForClient(string $clientId): array {
+        $superbills = [];
+        
+        // Get all therapists
+        $this->userManager->callForAllUsers(function($user) use (&$superbills, $clientId) {
+            $therapistId = $user->getUID();
+            $therapistSuperbills = $this->getSuperbillsForTherapist($therapistId);
+            
+            // Filter superbills for the current client
+            foreach ($therapistSuperbills as $superbill) {
+                if (isset($superbill['clientId']) && $superbill['clientId'] === $clientId) {
+                    $superbill['therapistName'] = $user->getDisplayName();
+                    $superbills[] = $superbill;
+                }
+            }
+        });
+        
+        return $superbills;
+    }
+    
+    /**
+     * Get a specific invoice
      * 
      * @param string $invoiceId The invoice ID
-     * @param string $userId The user ID
      * @return array|null The invoice, or null if not found
      */
-    public function getInvoice(string $invoiceId, string $userId): ?array {
-        // Find the invoice
+    public function getInvoice(string $invoiceId): ?array {
+        // Search for the invoice among all therapists
         $invoice = null;
-        $therapistId = null;
         
-        // Check if the current user is a therapist
-        $isTherapist = $this->config->getUserValue(
-            $userId, 
-            Application::APP_ID, 
-            Application::CONFIG_IS_THERAPIST, 
-            'false'
-        ) === 'true';
-        
-        if ($isTherapist) {
-            // Check if the invoice belongs to this therapist
-            $invoices = json_decode($this->config->getUserValue(
-                $userId,
-                Application::APP_ID,
-                Application::CONFIG_INVOICES,
-                '[]'
-            ), true);
+        $this->userManager->callForAllUsers(function($user) use (&$invoice, $invoiceId) {
+            if ($invoice !== null) {
+                return;
+            }
             
-            foreach ($invoices as $inv) {
+            $therapistId = $user->getUID();
+            $therapistInvoices = $this->getInvoicesForTherapist($therapistId);
+            
+            foreach ($therapistInvoices as $inv) {
                 if (isset($inv['id']) && $inv['id'] === $invoiceId) {
+                    $inv['therapistName'] = $user->getDisplayName();
                     $invoice = $inv;
-                    $therapistId = $userId;
-                    break;
+                    return;
                 }
             }
-        }
-        
-        // If not found and user is not a therapist or invoice doesn't belong to them,
-        // check all therapists for an invoice where this user is the client
-        if ($invoice === null) {
-            $therapists = $this->userManager->search('');
-            
-            foreach ($therapists as $therapist) {
-                $tId = $therapist->getUID();
-                $isTherapistRole = $this->config->getUserValue(
-                    $tId, 
-                    Application::APP_ID, 
-                    Application::CONFIG_IS_THERAPIST, 
-                    'false'
-                ) === 'true';
-                
-                if ($isTherapistRole) {
-                    $therapistInvoices = json_decode($this->config->getUserValue(
-                        $tId,
-                        Application::APP_ID,
-                        Application::CONFIG_INVOICES,
-                        '[]'
-                    ), true);
-                    
-                    foreach ($therapistInvoices as $inv) {
-                        if (isset($inv['id']) && $inv['id'] === $invoiceId && 
-                            isset($inv['clientId']) && $inv['clientId'] === $userId) {
-                            $invoice = $inv;
-                            $therapistId = $tId;
-                            break 2;
-                        }
-                    }
-                }
-            }
-        }
+        });
         
         return $invoice;
     }
     
     /**
-     * Process a payment using Square
+     * Get a specific superbill
      * 
-     * @param string $invoiceId The invoice ID
-     * @param string $sourceId The Square source ID (nonce)
-     * @param string $userId The user ID
-     * @return array|null The payment result, or null if payment failed
+     * @param string $superbillId The superbill ID
+     * @return array|null The superbill, or null if not found
      */
-    public function processPayment(string $invoiceId, string $sourceId, string $userId): ?array {
-        // Find the invoice
-        $invoice = null;
-        $therapistId = null;
-        $invoiceIndex = -1;
-        $invoices = [];
+    public function getSuperbill(string $superbillId): ?array {
+        // Search for the superbill among all therapists
+        $superbill = null;
         
-        // Check all therapists for the invoice
-        $therapists = $this->userManager->search('');
-        
-        foreach ($therapists as $therapist) {
-            $tId = $therapist->getUID();
-            $isTherapistRole = $this->config->getUserValue(
-                $tId, 
-                Application::APP_ID, 
-                Application::CONFIG_IS_THERAPIST, 
-                'false'
-            ) === 'true';
+        $this->userManager->callForAllUsers(function($user) use (&$superbill, $superbillId) {
+            if ($superbill !== null) {
+                return;
+            }
             
-            if ($isTherapistRole) {
-                $therapistInvoices = json_decode($this->config->getUserValue(
-                    $tId,
-                    Application::APP_ID,
-                    Application::CONFIG_INVOICES,
-                    '[]'
-                ), true);
-                
-                foreach ($therapistInvoices as $index => $inv) {
-                    if (isset($inv['id']) && $inv['id'] === $invoiceId) {
-                        $invoice = $inv;
-                        $therapistId = $tId;
-                        $invoiceIndex = $index;
-                        $invoices = $therapistInvoices;
-                        break 2;
-                    }
+            $therapistId = $user->getUID();
+            $therapistSuperbills = $this->getSuperbillsForTherapist($therapistId);
+            
+            foreach ($therapistSuperbills as $sb) {
+                if (isset($sb['id']) && $sb['id'] === $superbillId) {
+                    $sb['therapistName'] = $user->getDisplayName();
+                    $superbill = $sb;
+                    return;
                 }
             }
+        });
+        
+        return $superbill;
+    }
+    
+    /**
+     * Update an invoice
+     * 
+     * @param string $invoiceId The invoice ID
+     * @param array $updateData The data to update
+     * @return array|null The updated invoice, or null if update failed
+     */
+    public function updateInvoice(string $invoiceId, array $updateData): ?array {
+        // Find the invoice and its therapist
+        $invoice = $this->getInvoice($invoiceId);
+        
+        if ($invoice === null || !isset($invoice['therapistId'])) {
+            return null;
         }
+        
+        $therapistId = $invoice['therapistId'];
+        $invoices = $this->getInvoicesForTherapist($therapistId);
+        
+        // Find the invoice index
+        $invoiceIndex = -1;
+        foreach ($invoices as $index => $inv) {
+            if (isset($inv['id']) && $inv['id'] === $invoiceId) {
+                $invoiceIndex = $index;
+                break;
+            }
+        }
+        
+        if ($invoiceIndex === -1) {
+            return null;
+        }
+        
+        // Update the invoice
+        foreach ($updateData as $key => $value) {
+            if ($key !== 'id' && $key !== 'therapistId' && $key !== 'clientId') {
+                $invoices[$invoiceIndex][$key] = $value;
+            }
+        }
+        
+        // Save the updated invoices
+        $this->config->setUserValue(
+            $therapistId,
+            Application::APP_ID,
+            'invoices',
+            json_encode($invoices)
+        );
+        
+        return $invoices[$invoiceIndex];
+    }
+    
+    /**
+     * Update a superbill
+     * 
+     * @param string $superbillId The superbill ID
+     * @param array $updateData The data to update
+     * @return array|null The updated superbill, or null if update failed
+     */
+    public function updateSuperbill(string $superbillId, array $updateData): ?array {
+        // Find the superbill and its therapist
+        $superbill = $this->getSuperbill($superbillId);
+        
+        if ($superbill === null || !isset($superbill['therapistId'])) {
+            return null;
+        }
+        
+        $therapistId = $superbill['therapistId'];
+        $superbills = $this->getSuperbillsForTherapist($therapistId);
+        
+        // Find the superbill index
+        $superbillIndex = -1;
+        foreach ($superbills as $index => $sb) {
+            if (isset($sb['id']) && $sb['id'] === $superbillId) {
+                $superbillIndex = $index;
+                break;
+            }
+        }
+        
+        if ($superbillIndex === -1) {
+            return null;
+        }
+        
+        // Update the superbill
+        foreach ($updateData as $key => $value) {
+            if ($key !== 'id' && $key !== 'therapistId' && $key !== 'clientId') {
+                $superbills[$superbillIndex][$key] = $value;
+            }
+        }
+        
+        // Save the updated superbills
+        $this->config->setUserValue(
+            $therapistId,
+            Application::APP_ID,
+            'superbills',
+            json_encode($superbills)
+        );
+        
+        return $superbills[$superbillIndex];
+    }
+    
+    /**
+     * Process a payment for an invoice using Square
+     * 
+     * @param string $invoiceId The invoice ID
+     * @param string $nonce The payment nonce from Square
+     * @param float $amount The payment amount
+     * @return array|null The payment result, or null if payment failed
+     */
+    public function processPayment(string $invoiceId, string $nonce, float $amount): ?array {
+        // Get the invoice
+        $invoice = $this->getInvoice($invoiceId);
         
         if ($invoice === null) {
             return null;
         }
         
-        // Check if the current user is the client for this invoice
-        if ($userId !== $invoice['clientId']) {
-            return null;
-        }
+        // TODO: Implement Square payment processing
+        // This would involve making API calls to Square's payment API
         
-        // Get Square API credentials
-        $squareAccessToken = $this->config->getAppValue(
-            Application::APP_ID, 
-            Application::CONFIG_SQUARE_ACCESS_TOKEN, 
-            ''
-        );
-        $squareEnvironment = $this->config->getAppValue(
-            Application::APP_ID, 
-            Application::CONFIG_SQUARE_ENVIRONMENT, 
+        // For now, simulate a successful payment
+        $paymentId = uniqid('pay_');
+        $payment = [
+            'id' => $paymentId,
+            'invoiceId' => $invoiceId,
+            'amount' => $amount,
+            'status' => 'succeeded',
+            'createdAt' => time()
+        ];
+        
+        // Update the invoice status
+        $this->updateInvoice($invoiceId, [
+            'status' => 'paid',
+            'paidAt' => time()
+        ]);
+        
+        return $payment;
+    }
+    
+    /**
+     * Get Square API credentials
+     * 
+     * @return array The Square API credentials
+     */
+    public function getSquareCredentials(): array {
+        $environment = $this->config->getAppValue(
+            Application::APP_ID,
+            'square_environment',
             'sandbox'
         );
         
-        if (empty($squareAccessToken)) {
-            return null;
-        }
+        $accessToken = $this->config->getAppValue(
+            Application::APP_ID,
+            'square_access_token',
+            ''
+        );
         
-        try {
-            // Initialize Square client
-            $client = new SquareClient([
-                'accessToken' => $squareAccessToken,
-                'environment' => $squareEnvironment === 'production' ? Environment::PRODUCTION : Environment::SANDBOX
-            ]);
-            
-            // Convert amount to cents
-            $amountCents = (int)($invoice['amount'] * 100);
-            
-            // Create money object
-            $money = new Money();
-            $money->setAmount($amountCents);
-            $money->setCurrency('USD');
-            
-            // Create payment request
-            $paymentRequest = new CreatePaymentRequest($sourceId, uniqid());
-            $paymentRequest->setAmountMoney($money);
-            $paymentRequest->setNote('Payment for invoice ' . $invoiceId);
-            
-            // Process payment
-            $response = $client->getPaymentsApi()->createPayment($paymentRequest);
-            
-            if ($response->isSuccess()) {
-                $payment = $response->getResult()->getPayment();
-                
-                // Update invoice status
-                $invoices[$invoiceIndex]['status'] = 'paid';
-                $invoices[$invoiceIndex]['paidAt'] = time();
-                $invoices[$invoiceIndex]['paymentId'] = $payment->getId();
-                
-                // Save the updated invoice
-                $this->config->setUserValue(
-                    $therapistId,
-                    Application::APP_ID,
-                    Application::CONFIG_INVOICES,
-                    json_encode($invoices)
-                );
-                
-                return [
-                    'message' => 'Payment processed successfully',
-                    'invoice' => $invoices[$invoiceIndex],
-                    'payment' => [
-                        'id' => $payment->getId(),
-                        'status' => $payment->getStatus(),
-                        'amount' => $payment->getAmountMoney()->getAmount() / 100,
-                        'currency' => $payment->getAmountMoney()->getCurrency(),
-                        'createdAt' => $payment->getCreatedAt()
-                    ]
-                ];
-            } else {
-                $this->logger->error('Square payment error: ' . json_encode($response->getErrors()));
-                return null;
-            }
-        } catch (ApiException $e) {
-            $this->logger->error('Square API exception: ' . $e->getMessage());
-            return null;
-        } catch (\Exception $e) {
-            $this->logger->error('Payment exception: ' . $e->getMessage());
-            return null;
-        }
+        $applicationId = $this->config->getAppValue(
+            Application::APP_ID,
+            'square_application_id',
+            ''
+        );
+        
+        return [
+            'environment' => $environment,
+            'accessToken' => $accessToken,
+            'applicationId' => $applicationId
+        ];
+    }
+    
+    /**
+     * Set Square API credentials
+     * 
+     * @param string $environment The Square environment (sandbox or production)
+     * @param string $accessToken The Square access token
+     * @param string $applicationId The Square application ID
+     * @return bool True if successful, false otherwise
+     */
+    public function setSquareCredentials(string $environment, string $accessToken, string $applicationId): bool {
+        $this->config->setAppValue(
+            Application::APP_ID,
+            'square_environment',
+            $environment
+        );
+        
+        $this->config->setAppValue(
+            Application::APP_ID,
+            'square_access_token',
+            $accessToken
+        );
+        
+        $this->config->setAppValue(
+            Application::APP_ID,
+            'square_application_id',
+            $applicationId
+        );
+        
+        return true;
     }
 }

@@ -1,110 +1,165 @@
 <?php
+/** @noinspection PhpMultipleClassDeclarationsInspection */
 
-declare(strict_types=1);
-
-/**
- * @copyright Copyright (c) 2023 NextCloud App Build
- *
- * @author NextCloud App Build
- *
- * @license AGPL-3.0-or-later
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- *
- */
+/** @noinspection PhpFullyQualifiedNameUsageInspection */
+/** @noinspection PhpComposerExtensionStubsInspection */
 
 namespace OCA\Appointments\Controller;
 
+use OC\AppFramework\Middleware\Security\Exceptions\NotLoggedInException;
+use OC\Security\CSP\ContentSecurityPolicyNonceManager;
 use OCA\Appointments\AppInfo\Application;
-use OCA\Appointments\Service\TherapistService;
-use OCP\AppFramework\Controller;
-use OCP\AppFramework\Http\TemplateResponse;
+use OCA\Appointments\Backend\BackendManager;
+use OCA\Appointments\Backend\BackendUtils;
+use OCA\Appointments\Backend\HintVar;
+use OCA\Appointments\Backend\IBackendConnector;
+use OCP\AppFramework\Http\ContentSecurityPolicy;
+use OCP\AppFramework\Http\NotFoundResponse;
+use OCP\AppFramework\Http\RedirectResponse;
+use OCP\AppFramework\Http\Response;
+use OCP\AppFramework\Http\Template\PublicTemplateResponse;
+use OCP\Http\Client\IClientService;
 use OCP\IConfig;
+use OCP\IGroupManager;
+use OCP\IL10N;
 use OCP\IRequest;
+use OCP\AppFramework\Http\TemplateResponse;
+use OCP\AppFramework\Controller;
+use OCP\IURLGenerator;
 use OCP\IUserSession;
+use OCP\Mail\IMailer;
+use OCP\Util;
+use Psr\Log\LoggerInterface;
 
-/**
- * Controller for the main app page
- */
-class PageController extends Controller {
-    /** @var IConfig */
-    private IConfig $config;
-    
-    /** @var IUserSession */
+class PageController extends Controller
+{
+    const RND_SPS = 'abcdefghijklmnopqrstuvwxyz1234567890';
+    const RND_SPU = '1234567890ABCDEF';
+
+    const TEST_TOKEN_CNF = '3b719b44-8ec9-41e9-b161-00fb1515b1ed';
+
+    private string|null $userId;
+    private IConfig $c;
+    private IMailer $mailer;
+    private IL10N $l;
+    private IBackendConnector $bc;
+    private BackendUtils $utils;
+    private LoggerInterface $logger;
     private IUserSession $userSession;
-    
-    /** @var TherapistService */
-    private TherapistService $therapistService;
-    
-    /** @var string|null */
-    private ?string $userId;
-    
-    /**
-     * Constructor for PageController
-     *
-     * @param string $appName The app name
-     * @param IRequest $request The request object
-     * @param IConfig $config The configuration service
-     * @param IUserSession $userSession The user session
-     * @param TherapistService $therapistService The therapist service
-     * @param string|null $userId The user ID
-     */
-    public function __construct(
-        string $appName,
-        IRequest $request,
-        IConfig $config,
-        IUserSession $userSession,
-        TherapistService $therapistService,
-        ?string $userId
+    private IURLGenerator $urlGenerator;
+
+    public function __construct(IRequest        $request,
+                                IConfig         $c,
+                                IMailer         $mailer,
+                                IL10N           $l,
+                                IUserSession    $userSession,
+                                BackendManager  $backendManager,
+                                BackendUtils    $utils,
+                                IURLGenerator   $urlGenerator,
+                                LoggerInterface $logger
     ) {
-        parent::__construct($appName, $request);
-        $this->config = $config;
+        parent::__construct(Application::APP_ID, $request);
+        $this->c = $c;
+        $this->mailer = $mailer;
+        $this->l = $l;
         $this->userSession = $userSession;
-        $this->therapistService = $therapistService;
-        $this->userId = $userId;
+        /** @noinspection PhpUnhandledExceptionInspection */
+        $this->bc = $backendManager->getConnector();
+        $this->utils = $utils;
+        $this->urlGenerator = $urlGenerator;
+        $this->logger = $logger;
+        $this->userId = $this->userSession->getUser()?->getUID();
     }
-    
+
     /**
-     * Render the main app page
+     * CAUTION: the @Stuff turns off security checks; for this page no admin is
+     *          required and no CSRF check. If you don't know what CSRF is, read
+     *          it up in the docs, or you might create a security hole. This is
+     *          basically the only required method to add this exemption, don't
+     *          add it to any other method if you don't exactly know what it does
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     * @return TemplateResponse
      */
-    public function index(): TemplateResponse {
-        $user = $this->userSession->getUser();
-        $isTherapist = false;
-        
-        if ($user !== null) {
-            $isTherapist = $this->therapistService->isTherapist($user->getUID());
+    public function index(): TemplateResponse
+    {
+        $t = new TemplateResponse($this->appName, 'index');
+
+        $disable = false;
+        if (!empty($this->userId)) {
+            $allowedGroups = $this->c->getAppValue($this->appName,
+                BackendUtils::KEY_LIMIT_TO_GROUPS);
+            if ($allowedGroups !== '') {
+                $aga = json_decode($allowedGroups, true);
+                if ($aga !== null) {
+                    $user = $this->userSession->getUser();
+                    $userGroups = \OC::$server->get(IGroupManager::class)->getUserGroups($user);
+                    $disable = true;
+                    foreach ($aga as $ag) {
+                        if (array_key_exists($ag, $userGroups)) {
+                            $disable = false;
+                            break;
+                        }
+                    }
+                }
+            }
         }
-        
-        $params = [
-            'user_id' => $this->userId,
-            'is_therapist' => $isTherapist,
-            'square_environment' => $this->config->getAppValue(
+
+        if ($disable) {
+            $t->setParams(['disabled' => true]);
+        } else {
+            // Add scripts and styles
+            Util::addScript(Application::APP_ID, 'appointments-main');
+            Util::addStyle(Application::APP_ID, 'style');
+            
+            // Check if the user is a therapist
+            $isTherapist = false;
+            if (!empty($this->userId)) {
+                $isTherapist = $this->c->getUserValue(
+                    $this->userId,
+                    Application::APP_ID,
+                    'is_therapist',
+                    'false'
+                ) === 'true';
+            }
+            
+            // Get Square credentials
+            $squareEnvironment = $this->c->getAppValue(
                 Application::APP_ID,
-                Application::CONFIG_SQUARE_ENVIRONMENT,
+                'square_environment',
                 'sandbox'
-            ),
-            'square_application_id' => $this->config->getAppValue(
+            );
+            
+            $squareApplicationId = $this->c->getAppValue(
                 Application::APP_ID,
-                Application::CONFIG_SQUARE_APPLICATION_ID,
+                'square_application_id',
                 ''
-            )
-        ];
+            );
+            
+            // Set template parameters
+            $t->setParams([
+                'userId' => $this->userId,
+                'isTherapist' => $isTherapist,
+                'squareEnvironment' => $squareEnvironment,
+                'squareApplicationId' => $squareApplicationId
+            ]);
+        }
+
+        $csp = $t->getContentSecurityPolicy();
+        if ($csp === null) {
+            $csp = new ContentSecurityPolicy();
+            $t->setContentSecurityPolicy($csp);
+        }
+        $csp->addAllowedFrameDomain('\'self\'');
         
-        return new TemplateResponse('appointments', 'index', $params);
+        // Add CSP for Square if needed
+        if (!empty($squareApplicationId)) {
+            $csp->addAllowedScriptDomain('https://sandbox.web.squarecdn.com');
+            $csp->addAllowedScriptDomain('https://web.squarecdn.com');
+            $csp->addAllowedConnectDomain('https://sandbox.squareup.com');
+            $csp->addAllowedConnectDomain('https://squareup.com');
+        }
+
+        return $t;// templates/index.php
     }
 }

@@ -1,31 +1,53 @@
 <?xml version="1.0"?>
-<info xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<info xmlns:xsi= "http://www.w3.org/2001/XMLSchema-instance"
       xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
     <id>appointments</id>
     <name>Therapist Appointments</name>
-    <summary>Schedule appointments with therapists</summary>
-    <description><![CDATA[
-This app allows users to schedule appointments with therapists.
-Features include:
-- Multiple therapists (each Nextcloud user is a therapist)
-- Advanced scheduling features (recurring appointments, cancellations, etc.)
-- Invoice & Superbill generation with Square payments integration
-]]></description>
-    <version>1.0.0</version>
+    <summary>Advanced appointment scheduling for therapists with billing integration.</summary>
+    <description><![CDATA[Advanced appointment scheduling application intended for managing appointments for multiple therapists. It handles complex scheduling tasks including appointment confirmations, cancellations, recurring appointments, and more. The app provides comprehensive analytics on individual therapist schedules and the entire practice. It also generates invoices and super bills with Square payment integration.
+
+Based on the original Appointments app by Sergey Mosin.]]></description>
+    <version>3.0.0</version>
     <licence>agpl</licence>
-    <author>NextCloud App Build</author>
+    <author mail="pdarleyjr@gmail.com" homepage="https://github.com/pdarleyjr">NextCloud App Build</author>
     <namespace>Appointments</namespace>
+    <types>
+        <dav/>
+    </types>
+    <documentation>
+        <user>https://github.com/SergeyMosin/Appointments#getting-started</user>
+        <admin>https://github.com/SergeyMosin/Appointments</admin>
+        <developer>https://github.com/SergeyMosin/Appointments</developer>
+    </documentation>
     <category>office</category>
     <category>organization</category>
-    <category>social</category>
-    <bugs>https://github.com/pdarleyjr/NextCloud-App-Build/issues</bugs>
+    <category>tools</category>
+    <website>https://www.srgdev.com/lab/nextcloud-appointments/</website>
+    <discussion>https://github.com/SergeyMosin/Appointments/issues</discussion>
+    <bugs>https://github.com/SergeyMosin/Appointments/issues</bugs>
+    <repository type="git">https://github.com/SergeyMosin/Appointments.git</repository>
+    <screenshot>https://raw.githubusercontent.com/SergeyMosin/Appointments/master/screenshots/screenshot1.jpg</screenshot>
+    <screenshot>https://raw.githubusercontent.com/SergeyMosin/Appointments/master/screenshots/screenshot2.jpg</screenshot>
+    <screenshot>https://raw.githubusercontent.com/SergeyMosin/Appointments/master/screenshots/screenshot3.jpg</screenshot>
     <dependencies>
-        <nextcloud min-version="26" max-version="31" />
+        <nextcloud min-version="29" max-version="31"/>
+        <backend>caldav</backend>
     </dependencies>
+    <repair-steps>
+        <post-migration>
+            <step>OCA\Appointments\Migration\UpdateHook</step>
+        </post-migration>
+        <install>
+            <step>OCA\Appointments\Migration\InstallHook</step>
+        </install>
+    </repair-steps>
     <navigations>
         <navigation>
             <name>Appointments</name>
             <route>appointments.page.index</route>
         </navigation>
     </navigations>
+    <background-jobs>
+        <job>OCA\Appointments\Cron\Reminders</job>
+    </background-jobs>
 </info>

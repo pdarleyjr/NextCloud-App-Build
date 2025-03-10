@@ -1,97 +1,96 @@
 <?php
 
-declare(strict_types=1);
-
-/**
- * @copyright Copyright (c) 2023 NextCloud App Build
- *
- * @author NextCloud App Build
- *
- * @license AGPL-3.0-or-later
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- *
- */
-
 namespace OCA\Appointments\AppInfo;
 
+use OCA\Appointments\Backend\BeforeTemplateRenderedListener;
+use OCA\Appointments\Backend\DavListener;
+use OCA\Appointments\Backend\RemoveScriptsMiddleware;
 use OCA\Appointments\Service\AppointmentService;
-use OCA\Appointments\Service\TherapistService;
+use OCA\Appointments\Service\AppointmentTypeService;
 use OCA\Appointments\Service\BillingService;
+use OCA\Appointments\Service\TherapistService;
+use OCA\DAV\Events\CalendarObjectMovedToTrashEvent;
+use OCA\DAV\Events\CalendarObjectUpdatedEvent;
+use OCA\DAV\Events\SubscriptionDeletedEvent;
 use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
 use OCP\AppFramework\Bootstrap\IBootstrap;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
+use OCP\AppFramework\Http\Events\BeforeTemplateRenderedEvent;
 use OCP\IConfig;
+use OCP\ILogger;
+use OCP\IUserManager;
 
-/**
- * Main application class for the Appointments app
- */
-class Application extends App implements IBootstrap {
+class Application extends App implements IBootstrap
+{
     // Application constants
-    public const APP_ID = 'appointments';
-    public const CONFIG_IS_THERAPIST = 'is_therapist';
-    public const CONFIG_SPECIALTIES = 'specialties';
-    public const CONFIG_BIO = 'bio';
-    public const CONFIG_HOURLY_RATE = 'hourly_rate';
-    public const CONFIG_SCHEDULE = 'schedule';
-    public const CONFIG_APPOINTMENTS = 'appointments';
-    public const CONFIG_INVOICES = 'invoices';
-    public const CONFIG_SQUARE_ENVIRONMENT = 'square_environment';
-    public const CONFIG_SQUARE_ACCESS_TOKEN = 'square_access_token';
-    public const CONFIG_SQUARE_APPLICATION_ID = 'square_application_id';
+    const APP_ID = 'appointments';
+    const CONFIG_IS_THERAPIST = 'is_therapist';
+    const CONFIG_SPECIALTIES = 'specialties';
+    const CONFIG_BIO = 'bio';
+    const CONFIG_HOURLY_RATE = 'hourly_rate';
+    const CONFIG_SCHEDULE = 'schedule';
+    const CONFIG_APPOINTMENTS = 'therapist_appointments';
+    const CONFIG_INVOICES = 'invoices';
+    const CONFIG_SUPERBILLS = 'superbills';
+    const CONFIG_SQUARE_ENVIRONMENT = 'square_environment';
+    const CONFIG_SQUARE_ACCESS_TOKEN = 'square_access_token';
+    const CONFIG_SQUARE_APPLICATION_ID = 'square_application_id';
 
-    /**
-     * Constructor for the Application class
-     */
-    public function __construct(array $urlParams = []) {
-        parent::__construct(self::APP_ID, $urlParams);
+    public function __construct()
+    {
+        parent::__construct(self::APP_ID);
     }
 
-    /**
-     * Register application services
-     */
-    public function register(IRegistrationContext $context): void {
-        // Register services for dependency injection
-        $context->registerService(AppointmentService::class, function($c) {
-            return new AppointmentService(
-                $c->get(IConfig::class),
-                $c->get(TherapistService::class)
-            );
-        });
+    public function register(IRegistrationContext $context): void
+    {
+        // Register original event listeners
+        $context->registerEventListener(CalendarObjectUpdatedEvent::class, DavListener::class);
+        $context->registerEventListener(CalendarObjectMovedToTrashEvent::class, DavListener::class);
+        $context->registerEventListener(SubscriptionDeletedEvent::class, DavListener::class);
 
+        $context->registerService('ApptRemoveScriptsMiddleware', function ($c) {
+            return new RemoveScriptsMiddleware();
+        });
+        $context->registerMiddleware('ApptRemoveScriptsMiddleware');
+
+        $context->registerEventListener(BeforeTemplateRenderedEvent::class, BeforeTemplateRenderedListener::class);
+        
+        // Register our custom services
         $context->registerService(TherapistService::class, function($c) {
             return new TherapistService(
                 $c->get(IConfig::class),
-                $c->get('UserManager')
+                $c->get(IUserManager::class)
             );
         });
-
+        
+        $context->registerService(AppointmentTypeService::class, function($c) {
+            return new AppointmentTypeService(
+                $c->get(IConfig::class)
+            );
+        });
+        
+        $context->registerService(AppointmentService::class, function($c) {
+            return new AppointmentService(
+                $c->get(IConfig::class),
+                $c->get(IUserManager::class),
+                $c->get(ILogger::class),
+                $c->get(TherapistService::class),
+                $c->get(AppointmentTypeService::class)
+            );
+        });
+        
         $context->registerService(BillingService::class, function($c) {
             return new BillingService(
                 $c->get(IConfig::class),
-                $c->get('UserManager'),
-                $c->get('Logger')
+                $c->get(IUserManager::class),
+                $c->get(ILogger::class)
             );
         });
     }
 
-    /**
-     * Boot the application
-     */
-    public function boot(IBootContext $context): void {
-        // Initialize app settings if needed
+    public function boot(IBootContext $context): void
+    {
         $config = $context->getServerContainer()->get(IConfig::class);
         
         // Set default Square environment if not set

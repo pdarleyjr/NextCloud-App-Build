@@ -1,36 +1,21 @@
 {
-    "name": "nextcloud/appointments",
-    "description": "Therapist appointment scheduling app for Nextcloud",
+    "name": "srgdev.com/appointments",
+    "description": "Book appointments into you calendar via secure online form.",
     "type": "project",
-    "license": "AGPL-3.0-or-later",
+    "license": "AGPL",
     "authors": [
         {
-            "name": "NextCloud App Build"
+            "name": "Sergey Mosin"
         }
     ],
-    "require": {
-        "php": ">=7.4",
-        "square/square": "^17.0"
-    },
+    "require": {},
     "require-dev": {
-        "phpunit/phpunit": "^9.5",
-        "nextcloud/coding-standard": "^1.0"
+        "phpunit/phpunit": "^8.5.21",
+        "ext-json": "*"
     },
     "autoload": {
         "psr-4": {
-            "OCA\\Appointments\\": "lib/"
+            "Unit\\": "tests/Unit/"
         }
-    },
-    "autoload-dev": {
-        "psr-4": {
-            "OCA\\Appointments\\Tests\\": "tests/"
-        }
-    },
-    "scripts": {
-        "lint": "find . -name \\*.php -not -path './vendor/*' -not -path './build/*' -print0 | xargs -0 -n1 php -l",
-        "cs:check": "php-cs-fixer fix --dry-run --diff",
-        "cs:fix": "php-cs-fixer fix",
-        "test": "phpunit -c phpunit.xml",
-        "test:coverage": "phpunit -c phpunit.xml --coverage-clover=coverage.xml"
     }
 }

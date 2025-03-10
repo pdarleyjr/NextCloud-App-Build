@@ -1,18 +1,20 @@
 <?php
-/**
- * @copyright Copyright (c) 2023 NextCloud App Build
- *
- * @author NextCloud App Build
- *
- * @license AGPL-3.0-or-later
- */
-script('appointments', 'appointments-main');
-style('appointments', 'style');
+/** @var array $_ */
+if(isset($_['disabled']) && $_['disabled']===true){
+    //occ config:app:set appointments limitToGroups --value '["group"]'
+    echo "<div style='width:100%; font-weight: bold; font-size:150%; opacity: .5; text-align: center;margin-top: 5em;'>This page is disabled by your sysadmin.</div>";
+} else {
+    script('appointments', 'appointments-main');
+    style('appointments', 'style');
 ?>
 
-<div id="appointments-app" data-user-id="<?php p($_['user_id']); ?>" data-is-therapist="<?php p($_['is_therapist']); ?>" data-square-environment="<?php p($_['square_environment']); ?>" data-square-application-id="<?php p($_['square_application_id']); ?>">
-    <div id="app-loading">
-        <div class="icon-loading"></div>
-        <h2><?php p($l->t('Loading Appointments...')); ?></h2>
-    </div>
+<div id="appointments-app" 
+     data-user-id="<?php p($_['userId']); ?>"
+     data-is-therapist="<?php p($_['isTherapist'] ? 'true' : 'false'); ?>"
+     data-square-environment="<?php p($_['squareEnvironment']); ?>"
+     data-square-application-id="<?php p($_['squareApplicationId']); ?>">
 </div>
+
+<?php
+}
+?>

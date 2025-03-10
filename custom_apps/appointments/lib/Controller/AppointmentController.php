@@ -2,28 +2,6 @@
 
 declare(strict_types=1);
 
-/**
- * @copyright Copyright (c) 2023 NextCloud App Build
- *
- * @author NextCloud App Build
- *
- * @license AGPL-3.0-or-later
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- *
- */
-
 namespace OCA\Appointments\Controller;
 
 use OCA\Appointments\AppInfo\Application;
@@ -146,13 +124,14 @@ class AppointmentController extends Controller {
         $therapistId = $this->request->getParam('therapistId');
         $startTime = $this->request->getParam('startTime');
         $endTime = $this->request->getParam('endTime');
+        $appointmentTypeId = $this->request->getParam('appointmentTypeId');
         $title = $this->request->getParam('title', 'Therapy Session');
         $notes = $this->request->getParam('notes', '');
         $isRecurring = $this->request->getParam('isRecurring', false);
         $recurringPattern = $this->request->getParam('recurringPattern', null);
         
         // Validate required parameters
-        if (empty($therapistId) || empty($startTime) || empty($endTime)) {
+        if (empty($therapistId) || empty($startTime) || empty($endTime) || empty($appointmentTypeId)) {
             return new JSONResponse(
                 ['message' => 'Missing required parameters'],
                 Http::STATUS_BAD_REQUEST
@@ -306,5 +285,73 @@ class AppointmentController extends Controller {
             'message' => 'Appointment deleted successfully',
             'id' => $id
         ]);
+    }
+    
+    /**
+     * Get analytics for a therapist
+     *
+     * @NoAdminRequired
+     * @return JSONResponse
+     */
+    public function getAnalytics(): JSONResponse {
+        $currentUser = $this->userSession->getUser();
+        
+        if ($currentUser === null) {
+            return new JSONResponse(
+                ['message' => 'Not logged in'],
+                Http::STATUS_UNAUTHORIZED
+            );
+        }
+        
+        $userId = $currentUser->getUID();
+        
+        // Check if the user is a therapist
+        if (!$this->therapistService->isTherapist($userId)) {
+            return new JSONResponse(
+                ['message' => 'Not a therapist'],
+                Http::STATUS_FORBIDDEN
+            );
+        }
+        
+        $startDate = $this->request->getParam('startDate', date('Y-m-d', strtotime('-30 days')));
+        $endDate = $this->request->getParam('endDate', date('Y-m-d'));
+        
+        $analytics = $this->appointmentService->getTherapistAnalytics($userId, $startDate, $endDate);
+        
+        return new JSONResponse($analytics);
+    }
+    
+    /**
+     * Get analytics for the entire practice
+     *
+     * @NoAdminRequired
+     * @return JSONResponse
+     */
+    public function getPracticeAnalytics(): JSONResponse {
+        $currentUser = $this->userSession->getUser();
+        
+        if ($currentUser === null) {
+            return new JSONResponse(
+                ['message' => 'Not logged in'],
+                Http::STATUS_UNAUTHORIZED
+            );
+        }
+        
+        $userId = $currentUser->getUID();
+        
+        // Check if the user is a therapist
+        if (!$this->therapistService->isTherapist($userId)) {
+            return new JSONResponse(
+                ['message' => 'Not a therapist'],
+                Http::STATUS_FORBIDDEN
+            );
+        }
+        
+        $startDate = $this->request->getParam('startDate', date('Y-m-d', strtotime('-30 days')));
+        $endDate = $this->request->getParam('endDate', date('Y-m-d'));
+        
+        $analytics = $this->appointmentService->getPracticeAnalytics($startDate, $endDate);
+        
+        return new JSONResponse($analytics);
     }
 }

@@ -2,30 +2,9 @@
 
 declare(strict_types=1);
 
-/**
- * @copyright Copyright (c) 2023 NextCloud App Build
- *
- * @author NextCloud App Build
- *
- * @license AGPL-3.0-or-later
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- *
- */
-
 namespace OCA\Appointments\Controller;
 
+use OCA\Appointments\AppInfo\Application;
 use OCA\Appointments\Service\BillingService;
 use OCA\Appointments\Service\TherapistService;
 use OCP\AppFramework\Controller;
@@ -70,7 +49,7 @@ class BillingController extends Controller {
     }
     
     /**
-     * Create an invoice for an appointment
+     * Create an invoice
      *
      * @NoAdminRequired
      * @return JSONResponse
@@ -86,33 +65,38 @@ class BillingController extends Controller {
         }
         
         $userId = $currentUser->getUID();
+        
+        // Check if the user is a therapist
+        if (!$this->therapistService->isTherapist($userId)) {
+            return new JSONResponse(
+                ['message' => 'Not a therapist'],
+                Http::STATUS_FORBIDDEN
+            );
+        }
+        
+        // Get invoice data from the request
         $appointmentId = $this->request->getParam('appointmentId');
-        $therapistId = $this->request->getParam('therapistId');
-        $customAmount = $this->request->getParam('amount');
-        $description = $this->request->getParam('description', 'Therapy Session');
+        $clientId = $this->request->getParam('clientId');
+        $amount = (float) $this->request->getParam('amount');
+        $description = $this->request->getParam('description', '');
+        $items = $this->request->getParam('items', []);
         
         // Validate required parameters
-        if (empty($appointmentId) || empty($therapistId)) {
+        if (empty($appointmentId) || empty($clientId) || $amount <= 0) {
             return new JSONResponse(
                 ['message' => 'Missing required parameters'],
                 Http::STATUS_BAD_REQUEST
             );
         }
         
-        // Check if therapist exists
-        if (!$this->therapistService->isTherapist($therapistId)) {
-            return new JSONResponse(
-                ['message' => 'Therapist not found'],
-                Http::STATUS_NOT_FOUND
-            );
-        }
-        
+        // Create the invoice
         $invoice = $this->billingService->createInvoice(
             $appointmentId,
-            $therapistId,
             $userId,
-            $customAmount,
-            $description
+            $clientId,
+            $amount,
+            $description,
+            $items
         );
         
         if ($invoice === null) {
@@ -123,6 +107,69 @@ class BillingController extends Controller {
         }
         
         return new JSONResponse($invoice, Http::STATUS_CREATED);
+    }
+    
+    /**
+     * Create a superbill
+     *
+     * @NoAdminRequired
+     * @return JSONResponse
+     */
+    public function createSuperbill(): JSONResponse {
+        $currentUser = $this->userSession->getUser();
+        
+        if ($currentUser === null) {
+            return new JSONResponse(
+                ['message' => 'Not logged in'],
+                Http::STATUS_UNAUTHORIZED
+            );
+        }
+        
+        $userId = $currentUser->getUID();
+        
+        // Check if the user is a therapist
+        if (!$this->therapistService->isTherapist($userId)) {
+            return new JSONResponse(
+                ['message' => 'Not a therapist'],
+                Http::STATUS_FORBIDDEN
+            );
+        }
+        
+        // Get superbill data from the request
+        $appointmentId = $this->request->getParam('appointmentId');
+        $clientId = $this->request->getParam('clientId');
+        $amount = (float) $this->request->getParam('amount');
+        $description = $this->request->getParam('description', '');
+        $diagnosisCodes = $this->request->getParam('diagnosisCodes', []);
+        $procedureCodes = $this->request->getParam('procedureCodes', []);
+        
+        // Validate required parameters
+        if (empty($appointmentId) || empty($clientId) || $amount <= 0) {
+            return new JSONResponse(
+                ['message' => 'Missing required parameters'],
+                Http::STATUS_BAD_REQUEST
+            );
+        }
+        
+        // Create the superbill
+        $superbill = $this->billingService->createSuperbill(
+            $appointmentId,
+            $userId,
+            $clientId,
+            $amount,
+            $description,
+            $diagnosisCodes,
+            $procedureCodes
+        );
+        
+        if ($superbill === null) {
+            return new JSONResponse(
+                ['message' => 'Failed to create superbill'],
+                Http::STATUS_INTERNAL_SERVER_ERROR
+            );
+        }
+        
+        return new JSONResponse($superbill, Http::STATUS_CREATED);
     }
     
     /**
@@ -142,8 +189,7 @@ class BillingController extends Controller {
             );
         }
         
-        $userId = $currentUser->getUID();
-        $invoice = $this->billingService->getInvoice($id, $userId);
+        $invoice = $this->billingService->getInvoice($id);
         
         if ($invoice === null) {
             return new JSONResponse(
@@ -152,11 +198,72 @@ class BillingController extends Controller {
             );
         }
         
+        // Check if the user has access to this invoice
+        $userId = $currentUser->getUID();
+        $isTherapist = $this->therapistService->isTherapist($userId);
+        
+        if ($isTherapist && $invoice['therapistId'] !== $userId) {
+            return new JSONResponse(
+                ['message' => 'Unauthorized'],
+                Http::STATUS_FORBIDDEN
+            );
+        } elseif (!$isTherapist && $invoice['clientId'] !== $userId) {
+            return new JSONResponse(
+                ['message' => 'Unauthorized'],
+                Http::STATUS_FORBIDDEN
+            );
+        }
+        
         return new JSONResponse($invoice);
     }
     
     /**
-     * Process a payment using Square
+     * Get a superbill
+     *
+     * @NoAdminRequired
+     * @param string $id The superbill ID
+     * @return JSONResponse
+     */
+    public function getSuperbill(string $id): JSONResponse {
+        $currentUser = $this->userSession->getUser();
+        
+        if ($currentUser === null) {
+            return new JSONResponse(
+                ['message' => 'Not logged in'],
+                Http::STATUS_UNAUTHORIZED
+            );
+        }
+        
+        $superbill = $this->billingService->getSuperbill($id);
+        
+        if ($superbill === null) {
+            return new JSONResponse(
+                ['message' => 'Superbill not found'],
+                Http::STATUS_NOT_FOUND
+            );
+        }
+        
+        // Check if the user has access to this superbill
+        $userId = $currentUser->getUID();
+        $isTherapist = $this->therapistService->isTherapist($userId);
+        
+        if ($isTherapist && $superbill['therapistId'] !== $userId) {
+            return new JSONResponse(
+                ['message' => 'Unauthorized'],
+                Http::STATUS_FORBIDDEN
+            );
+        } elseif (!$isTherapist && $superbill['clientId'] !== $userId) {
+            return new JSONResponse(
+                ['message' => 'Unauthorized'],
+                Http::STATUS_FORBIDDEN
+            );
+        }
+        
+        return new JSONResponse($superbill);
+    }
+    
+    /**
+     * Process a payment
      *
      * @NoAdminRequired
      * @return JSONResponse
@@ -171,27 +278,87 @@ class BillingController extends Controller {
             );
         }
         
-        $userId = $currentUser->getUID();
+        // Get payment data from the request
         $invoiceId = $this->request->getParam('invoiceId');
-        $sourceId = $this->request->getParam('sourceId'); // This is the nonce from Square
+        $nonce = $this->request->getParam('nonce');
+        $amount = (float) $this->request->getParam('amount');
         
         // Validate required parameters
-        if (empty($invoiceId) || empty($sourceId)) {
+        if (empty($invoiceId) || empty($nonce) || $amount <= 0) {
             return new JSONResponse(
                 ['message' => 'Missing required parameters'],
                 Http::STATUS_BAD_REQUEST
             );
         }
         
-        $result = $this->billingService->processPayment($invoiceId, $sourceId, $userId);
+        // Process the payment
+        $payment = $this->billingService->processPayment($invoiceId, $nonce, $amount);
         
-        if ($result === null) {
+        if ($payment === null) {
             return new JSONResponse(
-                ['message' => 'Payment processing failed'],
+                ['message' => 'Failed to process payment'],
                 Http::STATUS_INTERNAL_SERVER_ERROR
             );
         }
         
-        return new JSONResponse($result);
+        return new JSONResponse($payment);
+    }
+    
+    /**
+     * Get Square credentials
+     *
+     * @NoAdminRequired
+     * @return JSONResponse
+     */
+    public function getSquareCredentials(): JSONResponse {
+        $currentUser = $this->userSession->getUser();
+        
+        if ($currentUser === null) {
+            return new JSONResponse(
+                ['message' => 'Not logged in'],
+                Http::STATUS_UNAUTHORIZED
+            );
+        }
+        
+        $credentials = $this->billingService->getSquareCredentials();
+        
+        // Only return the application ID and environment, not the access token
+        return new JSONResponse([
+            'environment' => $credentials['environment'],
+            'applicationId' => $credentials['applicationId']
+        ]);
+    }
+    
+    /**
+     * Set Square credentials (admin only)
+     *
+     * @return JSONResponse
+     */
+    public function setSquareCredentials(): JSONResponse {
+        $environment = $this->request->getParam('environment');
+        $accessToken = $this->request->getParam('accessToken');
+        $applicationId = $this->request->getParam('applicationId');
+        
+        // Validate required parameters
+        if (empty($environment) || empty($accessToken) || empty($applicationId)) {
+            return new JSONResponse(
+                ['message' => 'Missing required parameters'],
+                Http::STATUS_BAD_REQUEST
+            );
+        }
+        
+        // Set the credentials
+        $success = $this->billingService->setSquareCredentials($environment, $accessToken, $applicationId);
+        
+        if (!$success) {
+            return new JSONResponse(
+                ['message' => 'Failed to set Square credentials'],
+                Http::STATUS_INTERNAL_SERVER_ERROR
+            );
+        }
+        
+        return new JSONResponse([
+            'message' => 'Square credentials set successfully'
+        ]);
     }
 }
