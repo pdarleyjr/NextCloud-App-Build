@@ -20,7 +20,7 @@ Features include:
     <category>social</category>
     <bugs>https://github.com/pdarleyjr/NextCloud-App-Build/issues</bugs>
     <dependencies>
-        <nextcloud min-version="22" max-version="25" />
+        <nextcloud min-version="26" max-version="31" />
     </dependencies>
     <navigations>
         <navigation>
