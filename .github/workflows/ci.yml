@@ -101,6 +101,8 @@ jobs:
           name: build-artifacts
           path: build/
           retention-days: 7
+          overwrite: true
+          compression-level: 6
 
   security:
     name: Security Scan
@@ -122,3 +124,5 @@ jobs:
           name: dependency-check-report
           path: reports/
           retention-days: 7
+          overwrite: true
+          compression-level: 6
