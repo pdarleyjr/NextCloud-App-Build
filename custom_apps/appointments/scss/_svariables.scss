@@ -72,7 +72,7 @@ $color-yellow: #FC0;
 
 // rgb(118, 118, 118) / #767676
 // min. color contrast for normal text on white background according to WCAG AA
-// (Works as well: color: #000; opacity: 0.57;)
+// (Works as well: color: #000; opacity: 57%;)
 $color-text-maxcontrast: nc-lighten($color-main-text, 33%) !default;
 $color-text-light: $color-main-text !default;
 $color-text-lighter: $color-text-maxcontrast !default;

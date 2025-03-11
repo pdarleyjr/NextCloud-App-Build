@@ -372,3 +372,41 @@ Changes not staged for commit:
   (use "git restore <file>..." to discard changes in working directory)
 	modified:   task_log.md
 
+## Committed Changes
+- Committed all recovered files and untracked files with message: 'Recovered missing files from original Appointments repository and added all untracked files'
+## Pushed Changes
+- Pushed all changes to the remote repository
+## SCSS & CSS Fixes
+- Fixed CSS issues using the fix-css-issues.js script
+- Fixed SCSS compilation errors in datepicker/index.scss and form.scss
+- Successfully built CSS and JavaScript files
+## Checking NextCloud Docker Status
+CONTAINER ID   IMAGE                                            COMMAND                  CREATED        STATUS          PORTS                                     NAMES
+c55b35a61b3f   mcr.microsoft.com/vscode/devcontainers/php:8.1   "docker-php-entrypoi…"   25 hours ago   Up 57 minutes   80/tcp                                    nextcloud-app-build-app-1
+2ae6a4251042   nextcloud:latest                                 "/entrypoint.sh apac…"   25 hours ago   Up 57 minutes   0.0.0.0:8080->80/tcp, [::]:8080->80/tcp   nextcloud-app
+4b3866f78506   mariadb:latest                                   "docker-entrypoint.s…"   25 hours ago   Up 57 minutes   3306/tcp                                  nextcloud-db
+- Created appinfo directory and copied info.xml file
+- Copied routes.php file
+- Created templates directory and copied index.php file
+- Copied public directory from templates
+- Copied help.php file
+- Copied settings_dump.php file
+## Restarting NextCloud
+- Restarted NextCloud container
+- Created lib/AppInfo directory and copied Application.php file
+- Copied all files from lib directory
+- Restarted NextCloud container after copying lib files
+## Summary of Work Completed
+- Fixed SCSS compilation errors in datepicker/index.scss and form.scss
+- Successfully built CSS and JavaScript files
+- Copied missing files from the original Appointments repository
+- Created appinfo directory and copied info.xml and routes.php files
+- Created templates directory and copied template files
+- Copied lib directory with all necessary PHP files
+## Current Errors
+- The app is still returning a 500 Internal Server Error when accessed
+- NextCloud logs show 'Could not find resource appointments/js/appointments-main.js to load'
+## Remaining Tasks
+- Resolve the missing JavaScript file issue
+- Ensure all necessary files are properly copied and configured
+- Test the app functionality once the errors are resolved

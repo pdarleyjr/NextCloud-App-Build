@@ -4,7 +4,7 @@
   height: 100%;
   &:hover {
     .#{$namespace}-scrollbar-track {
-      opacity: 1;
+      opacity: 100%;
     }
   }
 }
@@ -23,7 +23,7 @@
   width: 6px;
   z-index: 1;
   border-radius: 4px;
-  opacity: 0;
+  opacity: 0%;
   transition: opacity 0.24s ease-out;
   .#{$namespace}-scrollbar-thumb {
     position: absolute;
@@ -31,7 +31,7 @@
     height: 0;
     cursor: pointer;
     border-radius: inherit;
-    background-color: rgba(144, 147, 153, 0.3);
+    background-color: rgb(144 147 153 / 30%);
     transition: background-color 0.3s;
   }
 }

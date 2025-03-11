@@ -53,7 +53,7 @@
   background-color: #fff;
   border: 1px solid $input-border-color;
   border-radius: 4px;
-  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+  box-shadow: inset 0 1px 1px rgb(0 0 0 / 8%);
 
   &:hover,
   &:focus {
@@ -69,9 +69,7 @@
   &:focus {
     outline: none;
   }
-  &::-ms-clear {
-    display: none;
-  }
+  /* Removed unsupported MS pseudo-element */
 }
 
 .#{$namespace}-icon-calendar,
@@ -82,14 +80,14 @@
   transform: translateY(-50%);
   font-size: 16px;
   line-height: 1;
-  color: rgba(0, 0, 0, 0.5);
+  color: rgb(0 0 0 / 50%);
   vertical-align: middle;
 }
 
 .#{$namespace}-icon-clear {
   cursor: pointer;
   &:hover {
-    color: rgba(0, 0, 0, 0.8);
+    color: rgb(0 0 0 / 80%);
   }
 }
 
@@ -104,7 +102,7 @@
   position: absolute;
   margin-top: 1px;
   margin-bottom: 1px;
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);
+  box-shadow: 0 6px 12px rgb(0 0 0 / 18%);
   z-index: $popup-z-index;
 }
 
@@ -179,7 +177,7 @@
 
 .#{$namespace}-calendar-decade-separator {
   margin: 0 2px;
-  &:after {
+  &::after {
     content: '~';
   }
 }
@@ -243,7 +241,7 @@
 }
 
 .#{$namespace}-week-number {
-  opacity: 0.5;
+  opacity: 50%;
 }
 
 .#{$namespace}-table {
