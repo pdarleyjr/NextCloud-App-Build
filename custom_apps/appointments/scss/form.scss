@@ -1,4 +1,4 @@
-@import "_svariables.scss";
+@use "_svariables.scss" as *;
 
 body {
   background-color: $color-main-background;
@@ -101,19 +101,15 @@ body {
 
 $color-placeholder: $color-text-maxcontrast;
 $color-placeholder-var: var(--color-text-maxcontrast);
-.srgdev-ncfp-form-input::-webkit-input-placeholder,
-.srgdev-ncfp-form-textarea::-webkit-input-placeholder {
+
+// Standard placeholder
+.srgdev-ncfp-form-input::placeholder,
+.srgdev-ncfp-form-textarea::placeholder {
   color: $color-placeholder;
   color: $color-placeholder-var;
 }
 
-.srgdev-ncfp-form-input:-moz-placeholder,
-.srgdev-ncfp-form-textarea:-moz-placeholder {
-  color: $color-placeholder;
-  color: $color-placeholder-var;
-  opacity: 1;
-}
-
+// Firefox
 .srgdev-ncfp-form-input::-moz-placeholder,
 .srgdev-ncfp-form-textarea::-moz-placeholder {
   color: $color-placeholder;
@@ -121,20 +117,9 @@ $color-placeholder-var: var(--color-text-maxcontrast);
   opacity: 1;
 }
 
-.srgdev-ncfp-form-input:-ms-input-placeholder,
-.srgdev-ncfp-form-textarea:-ms-input-placeholder {
-  color: $color-placeholder;
-  color: $color-placeholder-var;
-}
-
-.srgdev-ncfp-form-input::-ms-input-placeholder,
-.srgdev-ncfp-form-textarea::-ms-input-placeholder {
-  color: $color-placeholder;
-  color: $color-placeholder-var;
-}
-
-.srgdev-ncfp-form-input::placeholder,
-.srgdev-ncfp-form-textarea::placeholder {
+// WebKit/Blink
+.srgdev-ncfp-form-input::-webkit-input-placeholder,
+.srgdev-ncfp-form-textarea::-webkit-input-placeholder {
   color: $color-placeholder;
   color: $color-placeholder-var;
 }
@@ -185,7 +170,7 @@ $color-placeholder-var: var(--color-text-maxcontrast);
   text-decoration: underline;
 }
 
-.checkbox[err] + label:before {
+.checkbox[err] + label::before {
   border-color: $color-error !important;
   border-color: var(--color-error) !important;
 }
@@ -203,7 +188,7 @@ $color-placeholder-var: var(--color-text-maxcontrast);
 }
 
 .srgdev-ncfp-form-btn[shade] {
-  opacity: .5;
+  opacity: 0.5;
 }
 
 .srgdev-ncfp-form-btn span {
@@ -222,7 +207,7 @@ $color-placeholder-var: var(--color-text-maxcontrast);
   margin-left: 1em;
 }
 
-#srgdev-ncfp_fbtn-spinner:after {
+#srgdev-ncfp_fbtn-spinner::after {
   content: " ";
   display: block;
   width: 1em;
@@ -353,7 +338,7 @@ input.srgdev-ncfp-form-input:invalid,
 #srgdev-dpu_bf-back[disabled] {
   color: $color-text-lighter;
   color: var(--color-text-lighter);
-  opacity: .5;
+  opacity: 0.5;
 }
 
 #srgdev-dpu_bf-next {
@@ -364,13 +349,13 @@ input.srgdev-ncfp-form-input:invalid,
   text-align: left;
 }
 
-#srgdev-dpu_bf-next:after {
+#srgdev-dpu_bf-next::after {
   content: "\203A";
   padding-left: .4em;
   font-size: 125%;
 }
 
-#srgdev-dpu_bf-back:before {
+#srgdev-dpu_bf-back::before {
   padding-right: .4em;
   content: "\2039";
   font-size: 125%;
@@ -394,7 +379,7 @@ input.srgdev-ncfp-form-input:invalid,
 .srgdev-dpu-dc-empty {
   color: $color-text-lighter;
   color: var(--color-text-lighter);
-  opacity: .8;
+  opacity: 0.8;
 }
 
 .srgdev-dpu-date-cont:hover {
@@ -410,7 +395,7 @@ input.srgdev-ncfp-form-input:invalid,
 }
 
 .srgdev-dpu-dc-empty[data-active] {
-  opacity: .6;
+  opacity: 0.6;
 }
 
 
@@ -426,7 +411,7 @@ input.srgdev-ncfp-form-input:invalid,
 }
 
 .srgdev-dpu-date-wd {
-  opacity: .95;
+  opacity: 0.95;
   z-index: 1;
   font-size: 95%;
 }
@@ -556,7 +541,7 @@ $tz-cont-height: 2.5em;
   color: var(--color-main-text);
 }
 
-.srgdev-dpu-tz-name:after {
+.srgdev-dpu-tz-name::after {
   content: "";
   display: block;
   position: absolute;
@@ -597,7 +582,7 @@ $tz-cont-height: 2.5em;
   text-overflow: ellipsis;
 }
 
-.srgdev-dpu-time-unit .srgdev-dpu-appt-title:before {
+.srgdev-dpu-time-unit .srgdev-dpu-appt-title::before {
   content: " ";
 }
 
@@ -708,7 +693,7 @@ $tz-cont-height: 2.5em;
   color: var(--color-text-light);
 }
 
-.appt-dir-lnk_p:before {
+.appt-dir-lnk_p::before {
   content: "";
   position: absolute;
   display: block;
@@ -733,4 +718,4 @@ $tz-cont-height: 2.5em;
   }
 }
 
-@import "_form-xl-screen.scss";
+@use "_form-xl-screen.scss" as *;

@@ -1,10 +1,10 @@
-@import './var.scss';
-@import './icon.scss';
-@import './btn.scss';
-@import './scrollbar.scss';
-@import './animation.scss';
+@use 'var.scss';
+@use 'icon.scss';
+@use 'btn.scss';
+@use 'scrollbar.scss';
+@use 'animation.scss';
 
-.#{$namespace}-datepicker {
+.#{var.$namespace}-datepicker {
   position: relative;
   display: inline-block;
   width: 210px;
@@ -17,30 +17,30 @@
   }
 }
 
-.#{$namespace}-datepicker-range {
+.#{var.$namespace}-datepicker-range {
   width: 320px;
 }
 
-.#{$namespace}-datepicker-inline {
+.#{var.$namespace}-datepicker-inline {
   width: auto;
 }
 
-.#{$namespace}-input-wrapper {
+.#{var.$namespace}-input-wrapper {
   position: relative;
-  .#{$namespace}-icon-clear {
+  .#{var.$namespace}-icon-clear {
     display: none;
   }
   &:hover {
-    .#{$namespace}-icon-clear {
+    .#{var.$namespace}-icon-clear {
       display: block;
     }
-    .#{$namespace}-icon-clear + .#{$namespace}-icon-calendar {
+    .#{var.$namespace}-icon-clear + .#{var.$namespace}-icon-calendar {
       display: none;
     }
   }
 }
 
-.#{$namespace}-input {
+.#{var.$namespace}-input {
   display: inline-block;
   box-sizing: border-box;
   width: 100%;
@@ -49,66 +49,64 @@
   padding-left: 10px;
   font-size: 14px;
   line-height: 1.4;
-  color: $input-color;
+  color: var.$input-color;
   background-color: #fff;
-  border: 1px solid $input-border-color;
+  border: 1px solid var.$input-border-color;
   border-radius: 4px;
-  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+  box-shadow: inset 0 1px 1px rgb(0 0 0 / 0.08);
 
   &:hover,
   &:focus {
-    border-color: $input-hover-border-color;
+    border-color: var.$input-hover-border-color;
   }
   &:disabled,
   &.disabled {
-    color: $disabled-color;
-    background-color: $disabled-background-color;
-    border-color: $input-border-color;
+    color: var.$disabled-color;
+    background-color: var.$disabled-background-color;
+    border-color: var.$input-border-color;
     cursor: not-allowed;
   }
   &:focus {
     outline: none;
   }
-  &::-ms-clear {
-    display: none;
-  }
+  /* Modern browsers don't need MS-specific pseudo-elements */
 }
 
-.#{$namespace}-icon-calendar,
-.#{$namespace}-icon-clear {
+.#{var.$namespace}-icon-calendar,
+.#{var.$namespace}-icon-clear {
   position: absolute;
   top: 50%;
   right: 8px;
   transform: translateY(-50%);
   font-size: 16px;
   line-height: 1;
-  color: rgba(0, 0, 0, 0.5);
+  color: rgb(0 0 0 / 0.5);
   vertical-align: middle;
 }
 
-.#{$namespace}-icon-clear {
+.#{var.$namespace}-icon-clear {
   cursor: pointer;
   &:hover {
-    color: rgba(0, 0, 0, 0.8);
+    color: rgb(0 0 0 / 0.8);
   }
 }
 
-.#{$namespace}-datepicker-main {
+.#{var.$namespace}-datepicker-main {
   font: 14px/1.5 'Helvetica Neue', Helvetica, Arial, 'Microsoft Yahei', sans-serif;
-  color: $default-color;
-  background-color: $color-main-background;
-  border: 1px solid $border-color;
+  color: var.$default-color;
+  background-color: var.$color-main-background;
+  border: 1px solid var.$border-color;
 }
 
-.#{$namespace}-datepicker-popup {
+.#{var.$namespace}-datepicker-popup {
   position: absolute;
   margin-top: 1px;
   margin-bottom: 1px;
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);
-  z-index: $popup-z-index;
+  box-shadow: 0 6px 12px rgb(0 0 0 / 0.18);
+  z-index: var.$popup-z-index;
 }
 
-.#{$namespace}-datepicker-sidebar {
+.#{var.$namespace}-datepicker-sidebar {
   float: left;
   box-sizing: border-box;
   width: 100px;
@@ -116,47 +114,47 @@
   overflow: auto;
 }
 
-.#{$namespace}-datepicker-sidebar + .#{$namespace}-datepicker-content {
+.#{var.$namespace}-datepicker-sidebar + .#{var.$namespace}-datepicker-content {
   margin-left: 100px;
-  border-left: 1px solid $border-color;
+  border-left: 1px solid var.$border-color;
 }
 
-.#{$namespace}-datepicker-body {
+.#{var.$namespace}-datepicker-body {
   position: relative;
   user-select: none;
 }
 
-.#{$namespace}-btn-shortcut {
+.#{var.$namespace}-btn-shortcut {
   display: block;
   padding: 0 6px;
   line-height: 24px;
 }
 
-.#{$namespace}-range-wrapper {
+.#{var.$namespace}-range-wrapper {
   display: flex;
 }
 
-.#{$namespace}-datepicker-header {
+.#{var.$namespace}-datepicker-header {
   padding: 6px 8px;
-  border-bottom: 1px solid $border-color;
+  border-bottom: 1px solid var.$border-color;
 }
 
-.#{$namespace}-datepicker-footer {
+.#{var.$namespace}-datepicker-footer {
   padding: 6px 8px;
   text-align: right;
-  border-top: 1px solid $border-color;
+  border-top: 1px solid var.$border-color;
 }
 
-.#{$namespace}-calendar {
+.#{var.$namespace}-calendar {
   box-sizing: border-box;
   width: 248px;
   padding: 6px 12px;
   & + & {
-    border-left: 1px solid $border-color;
+    border-left: 1px solid var.$border-color;
   }
 }
 
-.#{$namespace}-calendar-header {
+.#{var.$namespace}-calendar-header {
   box-sizing: border-box;
   height: 34px;
   line-height: 34px;
@@ -164,27 +162,27 @@
   overflow: hidden;
 }
 
-.#{$namespace}-btn-icon-left,
-.#{$namespace}-btn-icon-double-left {
+.#{var.$namespace}-btn-icon-left,
+.#{var.$namespace}-btn-icon-double-left {
   float: left;
 }
-.#{$namespace}-btn-icon-right,
-.#{$namespace}-btn-icon-double-right {
+.#{var.$namespace}-btn-icon-right,
+.#{var.$namespace}-btn-icon-double-right {
   float: right;
 }
 
-.#{$namespace}-calendar-header-label {
+.#{var.$namespace}-calendar-header-label {
   font-size: 14px;
 }
 
-.#{$namespace}-calendar-decade-separator {
+.#{var.$namespace}-calendar-decade-separator {
   margin: 0 2px;
-  &:after {
+  &::after {
     content: '~';
   }
 }
 
-.#{$namespace}-calendar-content {
+.#{var.$namespace}-calendar-content {
   position: relative;
   height: 224px;
   box-sizing: border-box;
@@ -194,21 +192,21 @@
       cursor: pointer;
     }
     &:hover {
-      color: $calendar-hover-color;
-      background-color: $calendar-hover-background-color;
+      color: var.$calendar-hover-color;
+      background-color: var.$calendar-hover-background-color;
     }
     &.active {
-      color: $calendar-active-color;
-      background-color: $calendar-active-background-color;
+      color: var.$calendar-active-color;
+      background-color: var.$calendar-active-background-color;
     }
     &.in-range {
-      color: $calendar-in-range-color;
-      background-color: $calendar-in-range-background-color;
+      color: var.$calendar-in-range-color;
+      background-color: var.$calendar-in-range-background-color;
     }
     &.disabled {
       cursor: not-allowed;
-      color: $disabled-color;
-      background-color: $disabled-background-color;
+      color: var.$disabled-color;
+      background-color: var.$disabled-background-color;
       div{
         cursor: not-allowed;
       }
@@ -216,17 +214,17 @@
   }
 }
 
-.#{$namespace}-calendar-week-mode {
-  .#{$namespace}-date-row {
+.#{var.$namespace}-calendar-week-mode {
+  .#{var.$namespace}-date-row {
     cursor: pointer;
     &:hover {
-      background-color: $calendar-hover-background-color;
+      background-color: var.$calendar-hover-background-color;
     }
-    &.#{$namespace}-active-week {
-      background-color: $calendar-in-range-background-color;
-      color: $calendar-in-range-color;
+    &.#{var.$namespace}-active-week {
+      background-color: var.$calendar-in-range-background-color;
+      color: var.$calendar-in-range-color;
       .today{
-        color: $default-color;
+        color: var.$default-color;
       }
     }
     .cell {
@@ -242,11 +240,11 @@
   }
 }
 
-.#{$namespace}-week-number {
+.#{var.$namespace}-week-number {
   opacity: 0.5;
 }
 
-.#{$namespace}-table {
+.#{var.$namespace}-table {
   table-layout: fixed;
   border-collapse: separate;
   border-spacing: 0;
@@ -264,7 +262,7 @@
   }
 }
 
-.#{$namespace}-table-date {
+.#{var.$namespace}-table-date {
   td,
   th {
     height: 32px;
@@ -272,56 +270,56 @@
   }
 
   .today {
-    color: $today-color;
+    color: var.$today-color;
   }
   .cell.not-current-month {
     color: #ccc;
   }
 }
 
-.#{$namespace}-time {
+.#{var.$namespace}-time {
   flex: 1;
   width: 224px;
-  background: $color-main-background;
+  background: var.$color-main-background;
   & + & {
-    border-left: 1px solid $border-color;
+    border-left: 1px solid var.$border-color;
   }
 }
-.#{$namespace}-calendar-time {
+.#{var.$namespace}-calendar-time {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
 }
-.#{$namespace}-time-header {
-  @extend .#{$namespace}-calendar-header;
-  border-bottom: 1px solid $border-color;
+.#{var.$namespace}-time-header {
+  @extend .#{var.$namespace}-calendar-header;
+  border-bottom: 1px solid var.$border-color;
 }
 
-.#{$namespace}-time-content {
+.#{var.$namespace}-time-content {
   height: 224px;
   box-sizing: border-box;
   overflow: hidden;
 }
 
-.#{$namespace}-time-columns {
+.#{var.$namespace}-time-columns {
   display: flex;
   width: 100%;
   height: 100%;
   overflow: hidden;
 }
 
-.#{$namespace}-time-column {
+.#{var.$namespace}-time-column {
   flex: 1;
   position: relative;
-  border-left: 1px solid $border-color;
+  border-left: 1px solid var.$border-color;
   text-align: center;
 
   &:first-child {
     border-left: 0;
   }
-  .#{$namespace}-time-list {
+  .#{var.$namespace}-time-list {
     margin: 0;
     padding: 0;
     list-style: none;
@@ -331,45 +329,45 @@
       height: 32 * 6px;
     }
   }
-  .#{$namespace}-time-item {
+  .#{var.$namespace}-time-item {
     cursor: pointer;
     font-size: 12px;
     height: 32px;
     line-height: 32px;
     &:hover {
-      color: $time-hover-color;
-      background-color: $time-hover-background-color;
+      color: var.$time-hover-color;
+      background-color: var.$time-hover-background-color;
     }
     &.active {
-      color: $time-active-color;
-      background-color: $time-active-background-color;
+      color: var.$time-active-color;
+      background-color: var.$time-active-background-color;
       font-weight: 700;
     }
     &.disabled {
       cursor: not-allowed;
-      color: $disabled-color;
-      background-color: $disabled-background-color;
+      color: var.$disabled-color;
+      background-color: var.$disabled-background-color;
     }
   }
 }
 
-.#{$namespace}-time-option {
+.#{var.$namespace}-time-option {
   cursor: pointer;
   padding: 8px 10px;
   font-size: 14px;
   line-height: 20px;
   &:hover {
-    color: $time-hover-color;
-    background-color: $time-hover-background-color;
+    color: var.$time-hover-color;
+    background-color: var.$time-hover-background-color;
   }
   &.active {
-    color: $time-active-color;
-    background-color: $time-active-background-color;
+    color: var.$time-active-color;
+    background-color: var.$time-active-background-color;
     font-weight: 700;
   }
   &.disabled {
     cursor: not-allowed;
-    color: $disabled-color;
-    background-color: $disabled-background-color;
+    color: var.$disabled-color;
+    background-color: var.$disabled-background-color;
   }
 }
