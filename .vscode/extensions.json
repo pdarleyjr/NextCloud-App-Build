@@ -1,5 +1,12 @@
 {
     "recommendations": [
-        "ms-azuretools.vscode-docker"
+        "ms-azuretools.vscode-docker",
+        "ms-python.vscode-pylance",
+        "ms-python.python",
+        "ms-python.debugpy",
+        "bradlc.vscode-tailwindcss",
+        "oleg-shilo.cs-script",
+        "visualstudiotoolsforunity.vstuc",
+        "ms-vscode.powershell"
     ]
 }

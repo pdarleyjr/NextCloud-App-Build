@@ -1,0 +1,75 @@
+On branch pr-10
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+	modified:   .gitignore
+	modified:   .vscode/extensions.json
+	modified:   NextCloud-App-Build.code-workspace
+
+Unmerged paths:
+  (use "git restore --staged <file>..." to unstage)
+  (use "git add/rm <file>..." as appropriate to mark resolution)
+	deleted by us:   custom_apps/appointments/lib/Controller/AppointmentController.php
+	deleted by us:   custom_apps/appointments/lib/Controller/AppointmentTypeController.php
+	deleted by us:   custom_apps/appointments/lib/Controller/BillingController.php
+	deleted by us:   custom_apps/appointments/lib/Controller/TherapistController.php
+	deleted by us:   custom_apps/appointments/lib/Service/AppointmentService.php
+	deleted by us:   custom_apps/appointments/lib/Service/AppointmentTypeService.php
+	deleted by us:   custom_apps/appointments/lib/Service/BillingService.php
+	deleted by us:   custom_apps/appointments/lib/Service/TherapistService.php
+	deleted by us:   custom_apps/appointments/package-lock.json
+	deleted by us:   custom_apps/appointments/package.json
+	deleted by us:   custom_apps/appointments/scss/_form-xl-screen.scss
+	deleted by us:   custom_apps/appointments/scss/_svariables.scss
+	deleted by us:   custom_apps/appointments/scss/_variables.scss
+	deleted by us:   custom_apps/appointments/scss/datepicker/btn.scss
+	deleted by us:   custom_apps/appointments/scss/datepicker/icon.scss
+	deleted by us:   custom_apps/appointments/src/components/App.vue
+	deleted by us:   custom_apps/appointments/src/components/AppointmentTypeSelector.vue
+	deleted by us:   custom_apps/appointments/src/components/DateTimeSelector.vue
+	deleted by us:   custom_apps/appointments/src/components/PaymentProcessor.vue
+	deleted by us:   custom_apps/appointments/src/components/TherapistSelector.vue
+	deleted by us:   custom_apps/appointments/src/main.js
+	deleted by us:   custom_apps/appointments/src/views/Analytics.vue
+	deleted by us:   custom_apps/appointments/src/views/AppointmentsList.vue
+	deleted by us:   custom_apps/appointments/src/views/BookAppointment.vue
+	deleted by us:   custom_apps/appointments/src/views/InvoicesList.vue
+	deleted by us:   custom_apps/appointments/src/views/Schedule.vue
+	deleted by us:   custom_apps/appointments/webpack.common.js
+	deleted by us:   custom_apps/appointments/webpack.prod.js
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	custom_apps/appointments/.devcontainer/Dockerfile
+	custom_apps/appointments/.devcontainer/devcontainer.json
+	custom_apps/appointments/.gitignore
+	custom_apps/appointments/CSS_OPTIMIZATION.md
+	custom_apps/appointments/PULL_REQUEST.md
+	custom_apps/appointments/css/datepicker.css
+	custom_apps/appointments/css/form.css
+	custom_apps/appointments/css/form.css.map
+	custom_apps/appointments/css/hide-app.css
+	custom_apps/appointments/css/hide-app.css.map
+	custom_apps/appointments/css/style.css
+	custom_apps/appointments/css/style.css.map
+	custom_apps/appointments/js/chunks/appt.387.535a5907609d62c82dbb.js
+	custom_apps/appointments/js/cncf.js
+	custom_apps/appointments/js/cncf.js.map
+	custom_apps/appointments/js/form.js
+	custom_apps/appointments/js/form.js.map
+	custom_apps/appointments/js/form_css.js
+	custom_apps/appointments/js/form_css.js.map
+	custom_apps/appointments/js/hide_app_css.js
+	custom_apps/appointments/js/hide_app_css.js.map
+	custom_apps/appointments/js/script.js
+	custom_apps/appointments/js/script.js.map
+	custom_apps/appointments/js/style_css.js
+	custom_apps/appointments/js/style_css.js.map
+	custom_apps/appointments/js/vendors.js
+	custom_apps/appointments/js/vendors.js.map
+	custom_apps/appointments/postcss.config.js
+	custom_apps/appointments/scripts/fix-css-issues.js
+	custom_apps/appointments/scss/form.scss
+	custom_apps/appointments/verify-scss-files.sh
+	pending_files_list.txt
+	scripts/analyze-debug.sh
+

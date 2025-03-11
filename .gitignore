@@ -45,6 +45,7 @@ Thumbs.db
 *.bak
 *.tmp
 *.temp
+Untitled-1.json
 
 # Dependency directories
 /.sass-cache/
