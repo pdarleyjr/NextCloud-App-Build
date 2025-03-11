@@ -1,0 +1,22 @@
+{
+  "name": "Nextcloud App Dev",
+  "dockerFile": "Dockerfile",
+  "features": {
+    "node": "latest",
+    "php": "8.2",
+    "postgres": "latest"
+  },
+  "postCreateCommand": "composer install && npm install",
+  "forwardPorts": [8080, 8443],
+  "settings": {
+    "terminal.integrated.defaultProfile.linux": "bash",
+    "files.autoSave": "afterDelay",
+    "php.validate.executablePath": "/usr/bin/php"
+  },
+  "extensions": [
+    "felixfbecker.php-debug",
+    "bmewburn.vscode-intelephense-client",
+    "dbaeumer.vscode-eslint",
+    "mrmlnc.vscode-scss"
+  ]
+}

@@ -1,4 +1,4 @@
-@import "_svariables.scss";
+@use "_svariables.scss" as *;
 
 body {
   background-color: $color-main-background;
@@ -733,4 +733,4 @@ $tz-cont-height: 2.5em;
   }
 }
 
-@import "_form-xl-screen.scss";
+@use "_form-xl-screen.scss" as *;
