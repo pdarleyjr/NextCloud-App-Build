@@ -19,13 +19,31 @@ module.exports = {
         use: {
           loader: 'babel-loader',
           options: {
-            presets: ['@babel/preset-env']
+            presets: ['@babel/preset-env'],
+            cacheDirectory: true
           }
         }
       },
       {
         test: /\.css$/,
-        use: ['style-loader', 'css-loader']
+        use: [
+          {
+            loader: 'style-loader',
+            options: {
+              injectType: 'styleTag'
+            }
+          },
+          {
+            loader: 'css-loader',
+            options: {
+              esModule: false,
+              modules: {
+                namedExport: false,
+                localIdentName: '[name]__[local]--[hash:base64:5]'
+              }
+            }
+          }
+        ]
       }
     ]
   },
