@@ -4,7 +4,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-export default {
+const config = {
   mode: process.env.NODE_ENV === 'production' ? 'production' : 'development',
   entry: {
     main: path.join(__dirname, 'src', 'main.js')
@@ -40,9 +40,8 @@ export default {
           {
             loader: 'css-loader',
             options: {
-              esModule: true,
               modules: {
-                namedExport: true,
+                namedExport: false,
                 localIdentName: '[name]__[local]--[hash:base64:5]'
               }
             }
@@ -59,4 +58,8 @@ export default {
     }
   },
   devtool: process.env.NODE_ENV === 'production' ? 'source-map' : 'eval-source-map'
-}
+};
+
+// For webpack-cli 6.0.1 compatibility
+export default config;
+export { config };
