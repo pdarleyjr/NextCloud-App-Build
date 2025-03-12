@@ -7,10 +7,11 @@ module.exports = {
   },
   extends: [
     'eslint:recommended',
-    'standard'
+    'standard',
+    'plugin:promise/recommended'
   ],
   parserOptions: {
-    ecmaVersion: 'latest',
+    ecmaVersion: 2022,
     sourceType: 'module'
   },
   plugins: [
@@ -37,6 +38,8 @@ module.exports = {
     'promise/avoid-new': 'off',
     'promise/no-new-statics': 'error',
     'promise/no-return-in-finally': 'warn',
-    'promise/valid-params': 'error'
+    'promise/valid-params': 'error',
+    'promise/prefer-await-to-callbacks': 'warn',
+    'promise/prefer-await-to-then': 'warn'
   }
 }

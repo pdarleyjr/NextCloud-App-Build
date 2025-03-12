@@ -31,18 +31,14 @@ const config = {
       {
         test: /\.css$/,
         use: [
-          {
-            loader: 'style-loader',
-            options: {
-              injectType: 'styleTag'
-            }
-          },
+          'style-loader',
           {
             loader: 'css-loader',
             options: {
               modules: {
                 namedExport: false,
-                localIdentName: '[name]__[local]--[hash:base64:5]'
+                localIdentName: '[name]__[local]--[hash:base64:5]',
+                importLoaders: 1
               }
             }
           }
