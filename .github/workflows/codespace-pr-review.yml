@@ -16,7 +16,7 @@ jobs:
           repository: ${{ github.event.pull_request.head.repo.full_name }}
           
       - name: Create Codespace
-        uses: github/codespaces-precreate@v1
+        uses: codespaces/prebuild-action@main
         with:
           devcontainer-path: .devcontainer/devcontainer.json
           
