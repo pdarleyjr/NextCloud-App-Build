@@ -236,7 +236,6 @@ $appt_grid_ml: 6em;
   overflow: hidden;
   display: inline-block;
   vertical-align: bottom;
-  -webkit-animation: ellipsis steps(4, end) 900ms infinite;
   animation: appt-btn-ellipsis steps(4, end) 900ms infinite;
   content: "\2026"; /* ascii code for the ellipsis character */
   width: 0;
@@ -521,7 +520,6 @@ $srgdev-prog-height: 3px;
   $background-blur: blur(10px);
 
   background-color: var(--color-main-background-blur, var(--color-main-background));
-  -webkit-backdrop-filter: $background-blur;
   backdrop-filter: $background-blur;
   border-radius: 2em;
 
