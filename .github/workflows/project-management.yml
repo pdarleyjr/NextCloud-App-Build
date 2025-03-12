@@ -17,26 +17,138 @@ jobs:
           github-token: ${{ secrets.ADD_TO_PROJECT_PAT }}
           
       - name: Set Project Card Status
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.ADD_TO_PROJECT_PAT }}
           script: |
             const issue_number = context.payload.issue ? context.payload.issue.number : context.payload.pull_request.number;
             const is_pr = !!context.payload.pull_request;
+            const repo = context.repo.owner + '/' + context.repo.repo;
             
-            let column_id;
+            let status_value;
             if (context.payload.action === 'opened' || context.payload.action === 'reopened') {
-              column_id = 'TODO';
+              status_value = 'Todo';
             } else if (context.payload.action === 'closed') {
               if (is_pr && context.payload.pull_request.merged) {
-                column_id = 'Done';
+                status_value = 'Done';
               } else {
-                column_id = 'Closed';
+                status_value = 'Cancelled';
               }
             }
             
-            if (column_id) {
-              console.log(`Moving ${is_pr ? 'PR' : 'issue'} #${issue_number} to ${column_id}`);
-              // Note: This is a simplified representation. The actual implementation would use the GitHub Projects API
-              // which requires specific project IDs and field IDs that would be determined at runtime.
+            if (status_value) {
+              console.log(`Moving ${is_pr ? 'PR' : 'issue'} #${issue_number} to ${status_value}`);
+              
+              // Get project ID
+              const projectQuery = `
+                query {
+                  user(login: "pdarleyjr") {
+                    projectV2(number: 1) {
+                      id
+                      fields(first: 20) {
+                        nodes {
+                          ... on ProjectV2SingleSelectField {
+                            id
+                            name
+                            options {
+                              id
+                              name
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              `;
+              
+              const projectData = await github.graphql(projectQuery);
+              const projectId = projectData.user.projectV2.id;
+              
+              // Find status field and value
+              const statusField = projectData.user.projectV2.fields.nodes.find(
+                field => field.name === 'Status'
+              );
+              
+              if (!statusField) {
+                console.log('Status field not found');
+                return;
+              }
+              
+              const statusOptionId = statusField.options.find(
+                option => option.name === status_value
+              )?.id;
+              
+              if (!statusOptionId) {
+                console.log(`Status value "${status_value}" not found`);
+                return;
+              }
+              
+              // Get item ID from content ID
+              const itemQuery = `
+                query {
+                  ${is_pr ? 'pullRequest' : 'issue'}(repo: "${context.repo.repo}", owner: "${context.repo.owner}", number: ${issue_number}) {
+                    id
+                  }
+                }
+              `;
+              
+              const contentData = await github.graphql(itemQuery);
+              const contentId = contentData[is_pr ? 'pullRequest' : 'issue'].id;
+              
+              // Find the item in the project
+              const itemsQuery = `
+                query {
+                  user(login: "pdarleyjr") {
+                    projectV2(number: 1) {
+                      items(first: 100) {
+                        nodes {
+                          id
+                          content {
+                            ... on Issue { id }
+                            ... on PullRequest { id }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              `;
+              
+              const itemsData = await github.graphql(itemsQuery);
+              const projectItem = itemsData.user.projectV2.items.nodes.find(
+                item => item.content && item.content.id === contentId
+              );
+              
+              if (!projectItem) {
+                console.log(`Item for ${is_pr ? 'PR' : 'issue'} #${issue_number} not found in project`);
+                return;
+              }
+              
+              // Update status
+              const updateMutation = `
+                mutation {
+                  updateProjectV2ItemFieldValue(
+                    input: {
+                      projectId: "${projectId}"
+                      itemId: "${projectItem.id}"
+                      fieldId: "${statusField.id}"
+                      value: { 
+                        singleSelectOptionId: "${statusOptionId}"
+                      }
+                    }
+                  ) {
+                    projectV2Item {
+                      id
+                    }
+                  }
+                }
+              `;
+              
+              try {
+                await github.graphql(updateMutation);
+                console.log(`Successfully updated ${is_pr ? 'PR' : 'issue'} #${issue_number} status to ${status_value}`);
+              } catch (error) {
+                console.error(`Error updating status: ${error}`);
+              }
             }

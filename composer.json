@@ -30,7 +30,7 @@
     "scripts": {
         "lint": "php-cs-fixer fix --dry-run --diff",
         "lint:fix": "php-cs-fixer fix",
-        "analyze": "phpstan analyse --level=5 lib/",
+        "analyze": "phpstan analyse --level=6 lib/",
         "test": "phpunit"
     },
     "config": {

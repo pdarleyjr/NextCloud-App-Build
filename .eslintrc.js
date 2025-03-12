@@ -6,7 +6,7 @@ module.exports = {
     jest: true
   },
   extends: [
-    'standard'
+    'eslint:recommended'
   ],
   parserOptions: {
     ecmaVersion: 'latest',
@@ -18,6 +18,7 @@ module.exports = {
     'quotes': ['error', 'single'],
     'semi': ['error', 'never'],
     'no-console': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
-    'no-debugger': process.env.NODE_ENV === 'production' ? 'warn' : 'off'
+    'no-debugger': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
+    'no-unused-vars': ['error', { 'argsIgnorePattern': '^_' }]
   }
 }
