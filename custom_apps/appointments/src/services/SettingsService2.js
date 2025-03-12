@@ -1,5 +1,6 @@
 import axios from "@nextcloud/axios";
 import {showError} from "@nextcloud/dialogs"
+import {translate as t} from "@nextcloud/l10n"
 import {CK} from "../use/constants"
 
 const CANCEL_MSG = '__canceled__'

@@ -105,29 +105,12 @@ $color-placeholder-var: var(--color-text-maxcontrast);
 // Standard placeholder
 .srgdev-ncfp-form-input::placeholder,
 .srgdev-ncfp-form-textarea::placeholder {
-  color: $color-placeholder;
-  color: $color-placeholder-var;
-}
-
-// Firefox
-.srgdev-ncfp-form-input::-moz-placeholder,
-.srgdev-ncfp-form-textarea::-moz-placeholder {
-  color: $color-placeholder;
-  color: $color-placeholder-var;
-  opacity: 1;
-}
-
-// WebKit/Blink
-.srgdev-ncfp-form-input::-webkit-input-placeholder,
-.srgdev-ncfp-form-textarea::-webkit-input-placeholder {
-  color: $color-placeholder;
   color: $color-placeholder-var;
 }
 
 .srgdev-ncfp-form-select:invalid {
   border-color: $color-border-dark;
   border-color: var(--color-border-dark);
-  color: $color-placeholder !important;
   color: $color-placeholder-var;
 }
 

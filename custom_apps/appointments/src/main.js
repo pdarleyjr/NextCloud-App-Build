@@ -54,6 +54,12 @@ const routes = [
     path: '/analytics',
     name: 'analytics',
     component: () => import('./views/Analytics.vue')
+  },
+  {
+    path: '/invoices/create/:appointmentId',
+    name: 'create-invoice',
+    component: () => import('./views/CreateInvoice.vue'),
+    props: true
   }
 ]
 
