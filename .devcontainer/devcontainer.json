@@ -8,6 +8,10 @@
   "postCreateCommand": "bash .devcontainer/setup.sh",
   "postAttachCommand": "bash keep-session-alive.sh &",
   "idleTimeout": "2h",
+  "mounts": [
+      "source=${localWorkspaceFolder}/custom_apps/appointments/img,target=/var/www/html/apps/theming/img/background,type=bind",
+      "source=${localWorkspaceFolder}/custom_apps/appointments/img,target=/var/www/html/core/img/logo,type=bind"
+    ],
   
   "customizations": {
     "vscode": {

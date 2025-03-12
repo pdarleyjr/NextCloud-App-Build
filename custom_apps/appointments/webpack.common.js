@@ -6,8 +6,9 @@ const scssDir = path.join(__dirname, 'scss')
 
 module.exports = {
 	entry: {
-		script: path.join(__dirname, 'src', 'main.js'),
+		'appointments-main': path.join(__dirname, 'src', 'main.js'),
 		form: path.join(__dirname, 'src', 'form.js'),
+		notifications: path.join(__dirname, 'js', 'websocket-notifications.js'),
 		cncf: path.join(__dirname, 'src', 'cncf.js'),
 		form_css: path.join(scssDir, 'form.scss'),
 		style_css: path.join(scssDir, 'style.scss'),
@@ -101,4 +102,3 @@ module.exports = {
 		}
 	}
 }
-

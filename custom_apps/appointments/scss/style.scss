@@ -3,6 +3,11 @@
 @use "_variables.scss" as var;
 @use "sass:color";
 
+$opacity_normal: 1;
+$opacity_full: 1;
+$clickable-area: 44px;
+$breakpoint-mobile: 768px;
+
 .srgdev-icon-override {
   background-repeat: no-repeat;
   background-position: center;
@@ -288,7 +293,7 @@ $appt_grid_ml: 6em;
 //.srgdev-appt-cell-txt>span{
 //	opacity: 80%;
 //}
-//
+// End of commented section
 //.srgdev-appt-cell-bkr{
 //	position: absolute;
 //	display: block;
@@ -836,7 +841,7 @@ textarea.appt-stn-txt-ta {
 .srgdev-appt-sb-main-spacer {
   height: 0;
   margin: .75em 0 .75em -4%;
-  border-top: 1px solid var.$color-border-dark;
+  border-top: 1px solid var(--color-border-dark);
   width: 104%;
 
 }
